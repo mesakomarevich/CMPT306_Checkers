@@ -11,6 +11,8 @@ namespace CMPT306_Checkers
 
         public int Y { get; set; }
 
+        public bool King { get; set; }
+
         public Checker()
         {
         }

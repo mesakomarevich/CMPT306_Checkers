@@ -10,5 +10,15 @@ namespace CMPT306_Checkers
         public Tile()
         {
         }
+
+        public Tile(Color newColor) : this()
+        {
+            Color = newColor;
+        }
+
+        public Tile(Color newColor, Checker newChecker) : this()
+        {
+            Checker = newChecker;
+        }
     }
 }
