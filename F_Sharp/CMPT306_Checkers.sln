@@ -1,0 +1,17 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "CMPT306_Checkers", "CMPT306_Checkers\CMPT306_Checkers.fsproj", "{DC369705-7710-4E26-922B-6154A0F97748}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|anycpu = Debug|anycpu
+		Release|anycpu = Release|anycpu
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DC369705-7710-4E26-922B-6154A0F97748}.Debug|anycpu.ActiveCfg = Debug|anycpu
+		{DC369705-7710-4E26-922B-6154A0F97748}.Debug|anycpu.Build.0 = Debug|anycpu
+		{DC369705-7710-4E26-922B-6154A0F97748}.Release|anycpu.ActiveCfg = Release|anycpu
+		{DC369705-7710-4E26-922B-6154A0F97748}.Release|anycpu.Build.0 = Release|anycpu
+	EndGlobalSection
+EndGlobal
