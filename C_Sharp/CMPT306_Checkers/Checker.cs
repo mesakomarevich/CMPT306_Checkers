@@ -15,14 +15,16 @@ namespace CMPT306_Checkers
 
         public Checker()
         {
+
         }
 
-        public Checker(int newId, Color newColor, int newX, int newY) : this()
+        public Checker(int newId, Color newColor, int newX, int newY, bool newKing): this()
         {
             Id = newId;
             Color = newColor;
             X = newX;
             Y = newY;
+            King = false;
         }
     }
 

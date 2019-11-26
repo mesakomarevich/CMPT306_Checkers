@@ -39,38 +39,38 @@ namespace CMPT306_Checkers
 
             Blacks = new List<Checker>
             {
-                new Checker(0, Color.Black, 0, 0),
-                new Checker(1, Color.Black, 2, 0),
-                new Checker(2, Color.Black, 4, 0),
-                new Checker(3, Color.Black, 6, 0),
+                new Checker(0, Color.Black, 0, 0, false),
+                new Checker(1, Color.Black, 2, 0, false),
+                new Checker(2, Color.Black, 4, 0, false),
+                new Checker(3, Color.Black, 6, 0, false),
 
-                new Checker(4, Color.Black, 1, 1),
-                new Checker(5, Color.Black, 3, 1),
-                new Checker(6, Color.Black, 5, 1),
-                new Checker(7, Color.Black, 7, 1),
+                new Checker(4, Color.Black, 1, 1, false),
+                new Checker(5, Color.Black, 3, 1, false),
+                new Checker(6, Color.Black, 5, 1, false),
+                new Checker(7, Color.Black, 7, 1, false),
 
-                new Checker(8, Color.Black, 0, 2),
-                new Checker(9, Color.Black, 2, 2),
-                new Checker(10, Color.Black, 4, 2),
-                new Checker(11, Color.Black, 6, 2),
+                new Checker(8, Color.Black, 0, 2, false),
+                new Checker(9, Color.Black, 2, 2, false),
+                new Checker(10, Color.Black, 4, 2, false),
+                new Checker(11, Color.Black, 6, 2, false),
             };
 
             Reds = new List<Checker>
             {
-                new Checker(0, Color.Red, 1, 5),
-                new Checker(1, Color.Red, 3, 5),
-                new Checker(2, Color.Red, 5, 5),
-                new Checker(3, Color.Red, 7, 5),
+                new Checker(0, Color.Red, 1, 5, false),
+                new Checker(1, Color.Red, 3, 5, false),
+                new Checker(2, Color.Red, 5, 5, false),
+                new Checker(3, Color.Red, 7, 5, false),
 
-                new Checker(4, Color.Red, 0, 6),
-                new Checker(5, Color.Red, 2, 6),
-                new Checker(6, Color.Red, 4, 6),
-                new Checker(7, Color.Red, 6, 6),
+                new Checker(4, Color.Red, 0, 6, false),
+                new Checker(5, Color.Red, 2, 6, false),
+                new Checker(6, Color.Red, 4, 6, false),
+                new Checker(7, Color.Red, 6, 6, false),
 
-                new Checker(8, Color.Red, 1, 7),
-                new Checker(9, Color.Red, 3, 7),
-                new Checker(10, Color.Red, 5, 7),
-                new Checker(11, Color.Red, 7, 7),
+                new Checker(8, Color.Red, 1, 7, false),
+                new Checker(9, Color.Red, 3, 7, false),
+                new Checker(10, Color.Red, 5, 7, false),
+                new Checker(11, Color.Red, 7, 7, false),
             };
 
             for (int i = 0; i < Blacks.Count; i++)
@@ -114,6 +114,67 @@ namespace CMPT306_Checkers
             }
         }
 
+        public int BlackHeuristic(Checker checker)
+        {
+        }
 
+        public int? CheckLeft(Checker checker)
+        {
+            if (checker.Y < 7 && checker.X > 0)
+            {
+                Checker leftTile = Board[checker.Y + 1, checker.X - 1].Checker;
+
+                //leftTile has a checker of the opposite colour on it
+                if (leftTile != null && leftTile.Color != checker.Color
+                    //make sure we can potentially jump over it
+                    && checker.Y + 1 < 7 && checker.X - 1 > 0)
+                {
+                    if(Board[checker.Y + 2, checker.X - 2].Checker == null)
+                    {
+                        return BlackHeuristic(new Checker(checker.Id, checker.Color,
+                            checker.X, checker.Y, checker.King));
+                    }
+                }
+                //check if we can move left
+                else if (leftTile == null)
+                {
+                    return BlackHeuristic(new Checker(checker.Id, checker.Color,
+                        checker.X - 1, checker.Y + 1, checker.King));
+                }
+            }
+            return null;
+        }
+
+        public int? CheckRight(Checker checker)
+        {
+            if (checker.Y < 7 && checker.X < 7)
+            {
+                Checker leftTile = Board[checker.Y + 1, checker.X + 1].Checker;
+
+                //leftTile has a checker of the opposite colour on it
+                if (leftTile != null && leftTile.Color != checker.Color
+                    //make sure we can potentially jump over it
+                    && checker.Y + 1 < 7 && checker.X + 1 < 7)
+                {
+                    if (Board[checker.Y + 2, checker.X + 2].Checker == null)
+                    {
+                        return BlackHeuristic(new Checker(checker.Id, checker.Color,
+                            checker.X, checker.Y, checker.King));
+                    }
+                }
+                //check if we can move left
+                else if (leftTile == null)
+                {
+                    return BlackHeuristic(new Checker(checker.Id, checker.Color,
+                        checker.X + 1, checker.Y + 1, checker.King));
+                }
+            }
+            return null;
+        }
+
+        public int Move(Checker checker, int depth)
+        {
+
+        }
     }
 }
