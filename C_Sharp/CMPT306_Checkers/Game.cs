@@ -86,6 +86,55 @@ namespace CMPT306_Checkers
             }
         }
 
+        public void Reset()
+        {
+            Board = new Checker[8, 8];
+
+            Blacks = new List<Checker>
+            {
+                new Checker(0, Color.Black, 0, 0, false),
+                new Checker(1, Color.Black, 2, 0, false),
+                new Checker(2, Color.Black, 4, 0, false),
+                new Checker(3, Color.Black, 6, 0, false),
+
+                new Checker(4, Color.Black, 1, 1, false),
+                new Checker(5, Color.Black, 3, 1, false),
+                new Checker(6, Color.Black, 5, 1, false),
+                new Checker(7, Color.Black, 7, 1, false),
+
+                new Checker(8, Color.Black, 0, 2, false),
+                new Checker(9, Color.Black, 2, 2, false),
+                new Checker(10, Color.Black, 4, 2, false),
+                new Checker(11, Color.Black, 6, 2, false),
+            };
+
+            Reds = new List<Checker>
+            {
+                new Checker(0, Color.Red, 1, 5, false),
+                new Checker(1, Color.Red, 3, 5, false),
+                new Checker(2, Color.Red, 5, 5, false),
+                new Checker(3, Color.Red, 7, 5, false),
+
+                new Checker(4, Color.Red, 0, 6, false),
+                new Checker(5, Color.Red, 2, 6, false),
+                new Checker(6, Color.Red, 4, 6, false),
+                new Checker(7, Color.Red, 6, 6, false),
+
+                new Checker(8, Color.Red, 1, 7, false),
+                new Checker(9, Color.Red, 3, 7, false),
+                new Checker(10, Color.Red, 5, 7, false),
+                new Checker(11, Color.Red, 7, 7, false),
+            };
+
+            for (int i = 0; i < Blacks.Count; i++)
+            {
+                var black = Blacks[i];
+                var red = Reds[i];
+                Board[black.Y, black.X] = black;
+                Board[red.Y, red.X] = red;
+            }
+        }
+
         public void PrintBoard()
         {
             Console.WriteLine("  0 1 2 3 4 5 6 7");
@@ -578,7 +627,14 @@ namespace CMPT306_Checkers
             return bestMove;
         }
 
-        public void PlayTurn(Color color)
+        public void CompareSpeed()
+        {
+            PlayTurn(Color.Black, MakeMove);
+            Reset();
+            PlayTurn(Color.Black, MakeMoveParallel);
+        }
+
+        public void PlayTurn(Color color, Func<Checker[,], List<Checker>, List<Checker>, Color, int, int[], int[]> GetMove)
         {
             int[] move = null;
             Checker toMove;
@@ -589,13 +645,14 @@ namespace CMPT306_Checkers
 
             watch.Start();
 
+
             while (true)
             {
                 //PrintBoard();
 
                 //Console.ReadLine();
                 //move = MakeMove(Board, Blacks, Reds, color, depth, null);
-                move = MakeMoveParallel(Board, Blacks, Reds, color, depth, null);
+                move = GetMove(Board, Blacks, Reds, color, depth, null);
 
                 if (move != null && move.Length > 4)
                 {

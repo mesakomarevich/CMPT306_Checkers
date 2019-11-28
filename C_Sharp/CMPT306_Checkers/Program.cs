@@ -37,7 +37,8 @@ namespace CMPT306_Checkers
 
             //Console.WriteLine("Checker size: " + Marshal.SizeOf(c));
             //DisplaySizeOf<Game>();
-            game.PlayTurn(Color.Black);
+            //game.PlayTurn(Color.Black);
+            game.CompareSpeed();
         }
 
         public unsafe static void DisplaySizeOf<T>() where T : unmanaged
