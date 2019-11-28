@@ -30,13 +30,14 @@ namespace CMPT306_Checkers
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            //Console.WriteLine("Hello World!");
             Game game = new Game();
 
-            game.PrintBoard();
+            //game.PrintBoard();
 
-            Console.WriteLine("Checker size: " + Marshal.SizeOf(c));
+            //Console.WriteLine("Checker size: " + Marshal.SizeOf(c));
             //DisplaySizeOf<Game>();
+            game.PlayTurn(Color.Black);
         }
 
         public unsafe static void DisplaySizeOf<T>() where T : unmanaged

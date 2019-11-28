@@ -23,7 +23,16 @@ namespace CMPT306_Checkers
             Color = newColor;
             X = newX;
             Y = newY;
-            King = false;
+            King = newKing;
+        }
+
+        public Checker(Checker checker)
+        {
+            Id = checker.Id;
+            Color = checker.Color;
+            X = checker.X;
+            Y = checker.Y;
+            King = checker.King;
         }
     }
 
