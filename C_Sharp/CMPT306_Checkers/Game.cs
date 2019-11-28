@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CMPT306_Checkers
 {
@@ -19,7 +20,7 @@ namespace CMPT306_Checkers
      */
     public class Game
     {
-        public Tile[,] Board { get; set; }
+        public Checker[,] Board { get; set; }
 
         public List<Checker> Blacks { get; set; }
 
@@ -27,15 +28,15 @@ namespace CMPT306_Checkers
 
         public Game()
         {
-            Board = new Tile[8, 8];
+            Board = new Checker[8, 8];
 
-            for (int i = 0; i < 8; i++)
-            {
-                for (int n = 0; n < 8; n++)
-                {
-                    Board[i, n] = new Tile((CMPT306_Checkers.Color)(((i % 2) + n) % 2));
-                }
-            }
+            //for (int i = 0; i < 8; i++)
+            //{
+            //    for (int n = 0; n < 8; n++)
+            //    {
+            //        Board[i, n] = new Tile((CMPT306_Checkers.Color)(((i % 2) + n) % 2));
+            //    }
+            //}
 
             Blacks = new List<Checker>
             {
@@ -77,8 +78,8 @@ namespace CMPT306_Checkers
             {
                 var black = Blacks[i];
                 var red = Reds[i];
-                Board[black.Y, black.X].Checker = black;
-                Board[red.Y, red.X].Checker = red;
+                Board[black.Y, black.X] = black;
+                Board[red.Y, red.X] = red;
             }
         }
 
@@ -92,9 +93,9 @@ namespace CMPT306_Checkers
                 {
                     //Color color = Board[i, n].Checker?.Color ?? Board[i, n].Color;
 
-                    if (Board[i, n].Checker != null)
+                    if (Board[i, n] != null)
                     {
-                        Color color = Board[i, n].Checker.Color;
+                        Color color = Board[i, n].Color;
 
                         if (color == Color.Black)
                         {
@@ -114,65 +115,161 @@ namespace CMPT306_Checkers
             }
         }
 
-        public int BlackHeuristic(Checker checker)
+        public int BlackHeuristic(ref int[] move)
         {
+            int capture = 100;
+
+            int distanceMult = 20;
+
+            int score = 0;
+
+            int y = move[2];
+            int x = move[3];
+
+            //if no checker was captured
+            if(move.Length == 4)
+            {
+                foreach (Checker red in Reds)
+                {
+                    score += distanceMult - (Math.Abs(x - red.X) + Math.Abs(y - red.Y));
+                }
+            }
+            //if no checker was captured, we can ignore the check
+            else
+            {
+                foreach(Checker red in Reds)
+                {
+                    if(red.Y != move[4] && red.X != move[5])
+                    {
+                        score += distanceMult - (Math.Abs(x - red.X) + Math.Abs(y - red.Y));
+                    }
+                }
+                score += capture;
+            }
+            return score;
         }
 
-        public int? CheckLeft(Checker checker)
+        public int RedHeuristic(ref int[] move)
+        {
+            int capture = -100;
+
+            int distanceMult = -20;
+
+            int score = 0;
+
+            int y = move[2];
+            int x = move[3];
+
+            //if no checker was captured
+            if (move.Length == 4)
+            {
+                foreach (Checker black in Blacks)
+                {
+                    score += distanceMult + (Math.Abs(x - black.X) + Math.Abs(y - black.Y));
+                }
+            }
+            //if no checker was captured, we can ignore the check
+            else
+            {
+                foreach (Checker black in Blacks)
+                {
+                    if (black.Y != move[4] && black.X != move[5])
+                    {
+                        score += distanceMult - (Math.Abs(x - black.X) + Math.Abs(y - black.Y));
+                    }
+                }
+                score += capture;
+            }
+            return score;
+        }
+
+        public void CheckLeft(Checker checker, List<int[]> moves)
         {
             if (checker.Y < 7 && checker.X > 0)
             {
-                Checker leftTile = Board[checker.Y + 1, checker.X - 1].Checker;
+                Checker leftTile = Board[checker.Y + 1, checker.X - 1];
 
                 //leftTile has a checker of the opposite colour on it
                 if (leftTile != null && leftTile.Color != checker.Color
                     //make sure we can potentially jump over it
                     && checker.Y + 1 < 7 && checker.X - 1 > 0)
                 {
-                    if(Board[checker.Y + 2, checker.X - 2].Checker == null)
+                    if (Board[checker.Y + 2, checker.X - 2] == null)
                     {
-                        return BlackHeuristic(new Checker(checker.Id, checker.Color,
-                            checker.X, checker.Y, checker.King));
+                        moves.Add(new int[] {
+                            checker.Y, checker.X,           //from
+                            checker.Y + 2, checker.X - 2,   //to
+                            checker.Y + 1, checker.X - 1 });//capture
                     }
                 }
                 //check if we can move left
                 else if (leftTile == null)
                 {
-                    return BlackHeuristic(new Checker(checker.Id, checker.Color,
-                        checker.X - 1, checker.Y + 1, checker.King));
+                    moves.Add(new int[]
+                    {
+                        checker.Y, checker.X,           //from
+                        checker.Y + 1, checker.X - 1    //to
+                    });
                 }
             }
-            return null;
         }
 
-        public int? CheckRight(Checker checker)
+        public void CheckRight(Checker checker, List<int[]> moves)
         {
             if (checker.Y < 7 && checker.X < 7)
             {
-                Checker leftTile = Board[checker.Y + 1, checker.X + 1].Checker;
+                Checker leftTile = Board[checker.Y + 1, checker.X + 1];
 
                 //leftTile has a checker of the opposite colour on it
                 if (leftTile != null && leftTile.Color != checker.Color
                     //make sure we can potentially jump over it
                     && checker.Y + 1 < 7 && checker.X + 1 < 7)
                 {
-                    if (Board[checker.Y + 2, checker.X + 2].Checker == null)
+                    if (Board[checker.Y + 2, checker.X + 2] == null)
                     {
-                        return BlackHeuristic(new Checker(checker.Id, checker.Color,
-                            checker.X, checker.Y, checker.King));
+                        moves.Add(new int[] {
+                            checker.Y, checker.X,           //from
+                            checker.Y + 2, checker.X + 2,   //to
+                            checker.Y + 1, checker.X + 1 });//capture
                     }
                 }
                 //check if we can move left
                 else if (leftTile == null)
                 {
-                    return BlackHeuristic(new Checker(checker.Id, checker.Color,
-                        checker.X + 1, checker.Y + 1, checker.King));
+                    moves.Add(new int[]
+                    {
+                        checker.Y, checker.X,           //from
+                        checker.Y + 1, checker.X + 1    //to
+                    });
                 }
             }
-            return null;
         }
 
-        public int Move(Checker checker, int depth)
+        public int BlackMove(int depth)
+        {
+            int best = 0;
+            int curr = 0;
+            int[] bestMove;
+            List<int[]> moves = new List<int[]>();
+
+            foreach(var black in Blacks)
+            {
+                CheckLeft(black, moves);
+                CheckRight(black, moves);
+            }
+
+            foreach(var move in moves)
+            {
+                curr = BlackHeuristic(ref move);
+                if(curr > best)
+                {
+                    bestMove = move;
+                }
+            }
+
+        }
+
+        public int RedMove(int depth)
         {
 
         }

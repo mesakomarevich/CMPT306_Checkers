@@ -14,8 +14,7 @@ namespace CMPT306_Checkers
         public bool King { get; set; }
 
         public Checker()
-        {
-
+        { 
         }
 
         public Checker(int newId, Color newColor, int newX, int newY, bool newKing): this()
