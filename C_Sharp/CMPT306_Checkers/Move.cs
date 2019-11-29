@@ -1,23 +1,46 @@
 ﻿using System;
 namespace CMPT306_Checkers.Move
 {
-    public struct Move
+    public class Move
     {
-        public int fromX { get; set; }
-        public int fromY { get; set; }
+        public int FromX { get; set; }
+        public int FromY { get; set; }
 
-        public int toX { get; set; }
-        public int toY { get; set; }
+        public int ToX { get; set; }
+        public int ToY { get; set; }
 
-        public int captureX { get; set; }
-        public int captureY { get; set; }
+        public bool Capture { get; set; }
 
-        public Move(int fromX, int fromY, int toX, int toY)
+        public Checker Checker { get; set; }
+
+        public Checker Captured { get; set; }
+
+        public Move()
         {
-            this.fromX = fromX;
-            this.fromY = oldY;
-            this.toX = newX;
-            this.toY = newY;
+
+        }
+
+        public Move(int toX, int toY, Checker checker, Checker captured = null)
+        {
+            ToX = toX;
+            ToY = toY;
+            Checker = checker;
+            FromX = Checker.X;
+            FromY = Checker.Y;
+
+            if(captured != null)
+            {
+                Capture = true;
+                Captured = captured;
+            }
+        }
+
+        public Move(int fromX, int fromY, int toX, int toY, bool capture, Checker checker, Checker captured)
+        {
+            this.FromX = fromX;
+            this.FromY = fromY;
+            this.ToX = toX;
+            this.ToY = toY;
         }
     }
 }

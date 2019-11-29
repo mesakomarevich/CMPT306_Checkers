@@ -42,7 +42,8 @@ namespace CMPT306_Checkers
      */
 
     /*
-     * Should be able to take in a function for both blacks and reds
+     * Should be able to take in a function for both blacks and reds to use to make moves
+     * Should be able to take in a function for calculating the heuristics of blacks and reds
      */
     public class Game
     {
@@ -236,6 +237,32 @@ namespace CMPT306_Checkers
 
             return score;
         }
+
+        //public int BlackHeuristic(Checker[,] board, List<Checker> blacks, List<Checker> reds)
+        //{
+        //    int win = 10000;
+        //    int capture = 100;
+        //    int distanceMult = 20;
+
+        //    int score = 0;
+
+        //    score += blacks.Aggregate(0,
+        //        (bscore, black) => bscore += reds.Aggregate(0,
+        //            (rscore, red) =>
+        //                    rscore += distanceMult - (Math.Abs(black.X - red.X) + Math.Abs(black.Y - red.Y))));
+
+        //    if (reds.Count != 0)
+        //    {
+        //        score += ((12 - reds.Count) * capture);
+        //    }
+        //    else
+        //    {
+        //        score += win;
+        //    }
+
+
+        //    return score;
+        //}
 
         public int RedHeuristic(Checker[,] board, List<Checker> blacks, List<Checker> reds)
         {
