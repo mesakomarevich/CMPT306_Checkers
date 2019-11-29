@@ -40,10 +40,5 @@ namespace CMPT306_Checkers
             //game.PlayTurn(Color.Black);
             game.CompareSpeed();
         }
-
-        public unsafe static void DisplaySizeOf<T>() where T : unmanaged
-        {
-            Console.WriteLine($"Size of {typeof(T)} is {sizeof(T)}");
-        }
     }
 }
