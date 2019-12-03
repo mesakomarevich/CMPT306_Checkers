@@ -41,6 +41,9 @@ namespace CMPT306_Checkers
             MoveBounds = checker.MoveBounds;
         }
 
+        /// <summary>
+        /// Sets the movement bounds for the checker
+        /// </summary>
         public void SetMoveBounds()
         {
             MoveBounds = new List<MoveBound>();

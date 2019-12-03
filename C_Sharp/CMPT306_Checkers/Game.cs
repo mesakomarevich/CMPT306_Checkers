@@ -41,6 +41,12 @@ namespace CMPT306_Checkers
 
         public Stopwatch Watch { get; set; }
 
+        public Random random = new Random();
+
+        public Heuristic BlackHeuristic { get; set; }
+
+        public Heuristic RedHeuristic { get; set; }
+
         public Game()
         {
             Board = new Checker[8, 8];
@@ -92,6 +98,9 @@ namespace CMPT306_Checkers
             MaxNodes = 0;
 
             Watch = new Stopwatch();
+
+            BlackHeuristic = Heuristic.DefaultHeuristic(Color.Black);
+            RedHeuristic = Heuristic.DefaultHeuristic(Color.Red);
         }
 
         public void Reset()
@@ -164,25 +173,11 @@ namespace CMPT306_Checkers
 
                         if (checker.Color == Color.Black)
                         {
-                            if (checker.King)
-                            {
-                                row += " B";
-                            }
-                            else
-                            {
-                                row += " b";
-                            }
+                            row += checker.King ? " B" : " b";
                         }
                         else
                         {
-                            if (checker.King)
-                            {
-                                row += " R";
-                            }
-                            else
-                            {
-                                row += " r";
-                            }
+                            row += checker.King ? " R" : " r";
                         }
                     }
                     else
@@ -205,62 +200,6 @@ namespace CMPT306_Checkers
             {
                 Console.WriteLine($"Score: {score}");
             }
-        }
-
-        public int BlackHeuristic(Checker[,] board, List<Checker> blacks, List<Checker> reds)
-        {
-            int win = 10000;
-            int capture = 100;
-            int distanceMult = 20;
-            int king = 20;
-            int score = 0;
-
-            //higher score for getting closer to other checkers
-            score += blacks.Aggregate(0,
-                (bscore, black) => bscore += reds.Aggregate(0,
-                    (rscore, red) =>
-                            rscore += distanceMult - (Math.Abs(black.X - red.X) + Math.Abs(black.Y - red.Y))));
-
-            score += blacks.Sum(x => x.King ? king : 0);
-
-            if (reds.Count != 0)
-            {
-                score += ((12 - reds.Count) * capture);
-            }
-            else
-            {
-                score += win;
-            }
-
-            return score;
-        }
-
-        public int RedHeuristic(Checker[,] board, List<Checker> blacks, List<Checker> reds)
-        {
-            int win = -10000;
-            int capture = -100;
-            int distanceMult = -20;
-            int king = -20;
-            int score = 0;
-
-            //higher score for getting closer to other checkers
-            score += reds.Aggregate(0,
-                (rscore, red) => rscore += blacks.Aggregate(0,
-                    (bscore, black) =>
-                            bscore += distanceMult - (Math.Abs(red.X - black.X) + Math.Abs(red.Y - black.Y))));
-
-            score += reds.Sum(x => x.King ? king : 0);
-
-            if (blacks.Count != 0)
-            {
-                score += ((12 - blacks.Count) * capture);
-            }
-            else
-            {
-                score += win;
-            }
-
-            return score;
         }
 
         public void CheckBoard(Checker checker, Checker[,] board,
@@ -346,62 +285,11 @@ namespace CMPT306_Checkers
             }
         }
 
-
-        //public void CheckBoard(Checker checker, Checker[,] board,
-        //    List<int[]> moves, MoveBound bound)
-        //{
-        //    if (bound.yBound(checker.Y) && bound.xBound(checker.X))
-        //    {
-        //        Checker leftTile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
-
-        //        //leftTile has a checker of the opposite colour on it
-        //        if (leftTile != null && leftTile.Color != checker.Color
-        //            //make sure we can potentially jump over it
-        //            && bound.yBound(checker.Y + bound.yDir)
-        //            && bound.xBound(checker.X + bound.xDir))
-        //        {
-        //            if (board[checker.Y + (2 * bound.yDir),
-        //                checker.X + (2 * bound.xDir)] == null)
-        //            {
-        //                moves.Add(new int[] {
-        //                    checker.Y, checker.X,                                   //from
-        //                    checker.Y + (2*bound.yDir), checker.X + (2*bound.xDir), //to
-        //                    checker.Y + bound.yDir, checker.X + bound.xDir });      //capture
-        //            }
-        //        }
-        //        //check if we can move left
-        //        else if (leftTile == null)
-        //        {
-        //            moves.Add(new int[]
-        //            {
-        //                checker.Y, checker.X,                           //from
-        //                checker.Y + bound.yDir, checker.X + bound.xDir  //to
-        //            });
-        //        }
-        //    }
-        //}
-
-        //public void GetMoves(Checker[,] board, List<Checker> checkers, List<int[]> moves, Color turn)
-        //{
-        //    MoveBound left;
-        //    MoveBound right;
-
-        //    if (turn == Color.Black)
-        //    {
-        //        left = UpLeft;
-        //        right = UpRight;
-        //    }
-        //    else
-        //    {
-        //        left = DownLeft;
-        //        right = DownRight;
-        //    }
-        //    checkers.ForEach(checker =>
-        //    {
-        //        CheckBoard(checker, board, moves, left);
-        //        CheckBoard(checker, board, moves, right);
-        //    });
-        //}
+        //Used to add some randomness to decision making
+        public bool RandomChance(int percent = 50)
+        {
+            return random.Next(0, 100) >= percent;
+        }
 
         public int[] MakeMove(Checker[,] board, List<Checker> blacks, List<Checker> reds, Color turn, int depth, int[] currMove)
         {
@@ -490,15 +378,16 @@ namespace CMPT306_Checkers
                             //get the score
                             curr = tempMove[tempMove.Length - 1];
 
+                            //update the best move
                             if ((turn == Color.Black && curr > best) ||
-                                (turn == Color.Red && curr < best) || bestNotSet)
+                                (turn == Color.Red && curr < best) ||
+                                (best == curr && RandomChance()) || bestNotSet)
                             {
                                 best = curr;
                                 bestMove = new int[move.Length + 1];
                                 move.CopyTo(bestMove, 0);
                                 bestMove[bestMove.Length - 1] = best;
 
-                                //bestMove = tempMove;
                                 bestNotSet = false;
                             }
                         }
@@ -513,11 +402,11 @@ namespace CMPT306_Checkers
                 //do this in reverse because recursion
                 if (turn == Color.Black)
                 {
-                    bestMove[bestMove.Length - 1] = RedHeuristic(board, blacks, reds);
+                    bestMove[bestMove.Length - 1] = RedHeuristic.Calculate(board, blacks, reds);
                 }
                 else
                 {
-                    bestMove[bestMove.Length - 1] = BlackHeuristic(board, blacks, reds);
+                    bestMove[bestMove.Length - 1] = BlackHeuristic.Calculate(board, blacks, reds);
                 }
             }
 
@@ -526,8 +415,6 @@ namespace CMPT306_Checkers
 
         public Move MakeMoveClass(Checker[,] board, List<Checker> blacks, List<Checker> reds, Color turn, int depth, Move currMove)
         {
-            int best = 0;
-            int curr = 0;
             Move tempMove = null;
             Move bestMove = null;
             List<Move> moves = new List<Move>();
@@ -603,11 +490,9 @@ namespace CMPT306_Checkers
 
                     if (tempMove != null)
                     {
-                        //get the score
-                        //curr = tempMove[tempMove.Length - 1];
-
-                        if ((turn == Color.Black && curr > best) ||
-                            (turn == Color.Red && curr < best) || bestMove == null)
+                        if ((turn == Color.Black && tempMove.Score > bestMove.Score) ||
+                            (turn == Color.Red && tempMove.Score < bestMove.Score) ||
+                            (tempMove.Score == bestMove.Score && RandomChance()) || bestMove == null)
                         {
                             bestMove = new Move(move);
                             bestMove.Score = tempMove.Score;
@@ -622,11 +507,11 @@ namespace CMPT306_Checkers
                 //do this in reverse because recursion
                 if (turn == Color.Black)
                 {
-                    bestMove.Score = RedHeuristic(board, blacks, reds);
+                    bestMove.Score = RedHeuristic.Calculate(board, blacks, reds);
                 }
                 else
                 {
-                    bestMove.Score = BlackHeuristic(board, blacks, reds);
+                    bestMove.Score = BlackHeuristic.Calculate(board, blacks, reds);
                 }
             }
 
@@ -729,33 +614,18 @@ namespace CMPT306_Checkers
                     {
                         //get the score
                         curr = tempMove[tempMove.Length - 1];
-                        //black wants to maximize
-                        if (turn == Color.Black)
-                        {
-                            if (curr > best || bestNotSet)
-                            {
-                                best = curr;
-                                bestMove = new int[move.Length + 1];
-                                move.CopyTo(bestMove, 0);
-                                bestMove[bestMove.Length - 1] = best;
 
-                                //bestMove = tempMove;
-                                bestNotSet = false;
-                            }
-                        }
-                        //red wants to minimize
-                        else
+                        //update the best move
+                        if ((turn == Color.Black && curr > best) ||
+                            (turn == Color.Red && curr < best) ||
+                            (best == curr && RandomChance()) || bestNotSet)
                         {
-                            if (curr < best || bestNotSet)
-                            {
-                                best = curr;
-                                bestMove = new int[move.Length + 1];
-                                move.CopyTo(bestMove, 0);
-                                bestMove[bestMove.Length - 1] = best;
+                            best = curr;
+                            bestMove = new int[move.Length + 1];
+                            move.CopyTo(bestMove, 0);
+                            bestMove[bestMove.Length - 1] = best;
 
-                                //bestMove = tempMove;
-                                bestNotSet = false;
-                            }
+                            bestNotSet = false;
                         }
                     }
                 });
@@ -768,11 +638,11 @@ namespace CMPT306_Checkers
                 //do this in reverse because recursion
                 if (turn == Color.Black)
                 {
-                    bestMove[bestMove.Length - 1] = RedHeuristic(board, blacks, reds);
+                    bestMove[bestMove.Length - 1] = RedHeuristic.Calculate(board, blacks, reds);
                 }
                 else
                 {
-                    bestMove[bestMove.Length - 1] = BlackHeuristic(board, blacks, reds);
+                    bestMove[bestMove.Length - 1] = BlackHeuristic.Calculate(board, blacks, reds);
                 }
             }
 
@@ -829,28 +699,15 @@ namespace CMPT306_Checkers
         {
             int[] move = null;
             Checker toMove;
-            int turn = 0;
+            //int turn = 0;
             int depth = 6;
 
             Watch.Start();
 
-            while (true)
+            for(int turn = 0; ; turn++)
             {
-                if (move != null)
-                {
-                    if (move.Length == 5)
-                    {
-                        PrintBoard(color, move[4]);
-                    }
-                    else if (move.Length == 7)
-                    {
-                        PrintBoard(color, move[6]);
-                    }
-                }
-                else
-                {
-                    PrintBoard(color);
-                }
+
+                PrintBoard(color, move?[move.Length == 5 ? 4 : 6]);
 
                 move = GetMove(Board, Blacks, Reds, color, depth, null);
 
@@ -895,7 +752,6 @@ namespace CMPT306_Checkers
 
                 //change color
                 color = color == Color.Black ? Color.Red : Color.Black;
-                turn++;
             }
         }
 
