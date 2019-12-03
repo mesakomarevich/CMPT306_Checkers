@@ -490,9 +490,10 @@ namespace CMPT306_Checkers
 
                     if (tempMove != null)
                     {
-                        if ((turn == Color.Black && tempMove.Score > bestMove.Score) ||
+                        if (bestMove == null ||
+                            (turn == Color.Black && tempMove.Score > bestMove.Score) ||
                             (turn == Color.Red && tempMove.Score < bestMove.Score) ||
-                            (tempMove.Score == bestMove.Score && RandomChance()) || bestMove == null)
+                            (tempMove.Score == bestMove.Score && RandomChance()))
                         {
                             bestMove = new Move(move);
                             bestMove.Score = tempMove.Score;
@@ -700,14 +701,18 @@ namespace CMPT306_Checkers
             int[] move = null;
             Checker toMove;
             //int turn = 0;
-            int depth = 6;
+            int depth = 1;
 
             Watch.Start();
 
             for(int turn = 0; ; turn++)
             {
-
                 PrintBoard(color, move?[move.Length == 5 ? 4 : 6]);
+
+                if(turn % 100 == 0)
+                {
+                    depth++;
+                }
 
                 move = GetMove(Board, Blacks, Reds, color, depth, null);
 
