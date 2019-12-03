@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace CMPT306_Checkers
 {
@@ -36,12 +37,9 @@ namespace CMPT306_Checkers
 
         public List<Checker> Reds { get; set; }
 
-        public MoveBound UpLeft { get; set; }
-        public MoveBound UpRight { get; set; }
-        public MoveBound DownLeft { get; set; }
-        public MoveBound DownRight { get; set; }
-
         public int MaxNodes { get; set; }
+
+        public Stopwatch Watch { get; set; }
 
         public Game()
         {
@@ -91,20 +89,9 @@ namespace CMPT306_Checkers
                 Board[red.Y, red.X] = red;
             }
 
-            //Move configs
-            UpLeft = new MoveBound(1, -1,
-                (y) => { return y < 7; }, (x) => { return x > 0; });
-
-            UpRight = new MoveBound(1, 1,
-                (y) => { return y < 7; }, (x) => { return x < 7; });
-
-            DownLeft = new MoveBound(-1, -1,
-                (y) => { return y > 0; }, (x) => { return x > 0; });
-
-            DownRight = new MoveBound(-1, 1,
-                (y) => { return y > 0; }, (x) => { return x < 7; });
-
             MaxNodes = 0;
+
+            Watch = new Stopwatch();
         }
 
         public void Reset()
@@ -156,10 +143,13 @@ namespace CMPT306_Checkers
             }
 
             MaxNodes = 0;
+
+            Watch = new Stopwatch();
         }
 
-        public void PrintBoard()
+        public void PrintBoard(Color? turn = null, int? score = null)
         {
+            Console.WriteLine("\n");
             Console.WriteLine("  0 1 2 3 4 5 6 7");
             for (int i = 0; i < 8; i++)
             {
@@ -170,15 +160,29 @@ namespace CMPT306_Checkers
 
                     if (Board[i, n] != null)
                     {
-                        Color color = Board[i, n].Color;
+                        Checker checker = Board[i, n];
 
-                        if (color == Color.Black)
+                        if (checker.Color == Color.Black)
                         {
-                            row += " B";
+                            if (checker.King)
+                            {
+                                row += " B";
+                            }
+                            else
+                            {
+                                row += " b";
+                            }
                         }
                         else
                         {
-                            row += " R";
+                            if (checker.King)
+                            {
+                                row += " R";
+                            }
+                            else
+                            {
+                                row += " r";
+                            }
                         }
                     }
                     else
@@ -191,22 +195,33 @@ namespace CMPT306_Checkers
 
             Console.WriteLine($"Blacks: {Blacks.Count}");
             Console.WriteLine($"Reds: {Reds.Count}");
+
+            if (turn != null)
+            {
+                Console.WriteLine("Turn: {0}", turn == Color.Black ? "Black" : "Red");
+            }
+
+            if (score != null)
+            {
+                Console.WriteLine($"Score: {score}");
+            }
         }
-
-
 
         public int BlackHeuristic(Checker[,] board, List<Checker> blacks, List<Checker> reds)
         {
             int win = 10000;
             int capture = 100;
             int distanceMult = 20;
-
+            int king = 20;
             int score = 0;
 
+            //higher score for getting closer to other checkers
             score += blacks.Aggregate(0,
                 (bscore, black) => bscore += reds.Aggregate(0,
                     (rscore, red) =>
                             rscore += distanceMult - (Math.Abs(black.X - red.X) + Math.Abs(black.Y - red.Y))));
+
+            score += blacks.Sum(x => x.King ? king : 0);
 
             if (reds.Count != 0)
             {
@@ -217,7 +232,6 @@ namespace CMPT306_Checkers
                 score += win;
             }
 
-
             return score;
         }
 
@@ -226,12 +240,16 @@ namespace CMPT306_Checkers
             int win = -10000;
             int capture = -100;
             int distanceMult = -20;
+            int king = -20;
             int score = 0;
 
+            //higher score for getting closer to other checkers
             score += reds.Aggregate(0,
                 (rscore, red) => rscore += blacks.Aggregate(0,
                     (bscore, black) =>
                             bscore += distanceMult - (Math.Abs(red.X - black.X) + Math.Abs(red.Y - black.Y))));
+
+            score += reds.Sum(x => x.King ? king : 0);
 
             if (blacks.Count != 0)
             {
@@ -250,12 +268,13 @@ namespace CMPT306_Checkers
         {
             foreach (var bound in checker.MoveBounds)
             {
+                //make sure the checker is in bounds
                 if (bound.yBound(checker.Y) && bound.xBound(checker.X))
                 {
-                    Checker leftTile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
+                    Checker tile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
 
                     //leftTile has a checker of the opposite colour on it
-                    if (leftTile != null && leftTile.Color != checker.Color
+                    if (tile != null && tile.Color != checker.Color
                         //make sure we can potentially jump over it
                         && bound.yBound(checker.Y + bound.yDir)
                         && bound.xBound(checker.X + bound.xDir))
@@ -270,13 +289,58 @@ namespace CMPT306_Checkers
                         }
                     }
                     //check if we can move left
-                    else if (leftTile == null)
+                    else if (tile == null)
                     {
                         moves.Add(new int[]
                         {
                             checker.Y, checker.X,                           //from
                             checker.Y + bound.yDir, checker.X + bound.xDir  //to
                         });
+                    }
+                }
+            }
+        }
+
+        public void CheckBoard(Checker checker, Checker[,] board, List<Move> moves)
+        {
+            foreach (var bound in checker.MoveBounds)
+            {
+                //make sure the checker is in bounds
+                if (bound.yBound(checker.Y) && bound.xBound(checker.X))
+                {
+                    Checker tile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
+
+                    //leftTile has a checker of the opposite colour on it
+                    if (tile != null && tile.Color != checker.Color
+                        //make sure we can potentially jump over it
+                        && bound.yBound(checker.Y + bound.yDir)
+                        && bound.xBound(checker.X + bound.xDir))
+                    {
+                        if (board[checker.Y + (2 * bound.yDir),
+                            checker.X + (2 * bound.xDir)] == null)
+                        {
+                            moves.Add(new Move(
+                                fromY: checker.Y,
+                                fromX: checker.X,
+                                toY: checker.Y + (2 * bound.yDir),
+                                toX: checker.X + (2 * bound.xDir),
+                                king: checker.Kingable(checker.Y + (2 * bound.yDir)),
+                                capture: true,
+                                captureY: checker.Y + bound.yDir,
+                                captureX: checker.X + bound.xDir
+                                ));
+                        }
+                    }
+                    //check if we can move left
+                    else if (tile == null)
+                    {
+                        moves.Add(new Move(
+                                fromY: checker.Y,
+                                fromX: checker.X,
+                                toY: checker.Y + bound.yDir,
+                                toX: checker.X + bound.xDir,
+                                king: checker.Kingable(checker.Y + (2 * bound.yDir))
+                                ));
                     }
                 }
             }
@@ -360,20 +424,10 @@ namespace CMPT306_Checkers
                 if (turn == Color.Black)
                 {
                     blacks.ForEach(x => CheckBoard(x, board, moves));
-
-                    //foreach (var black in blacks)
-                    //{
-                    //    CheckBoard(black, board, moves);
-                    //}
                 }
                 else
                 {
                     reds.ForEach(x => CheckBoard(x, board, moves));
-                    //foreach (var red in reds)
-                    //{
-                    //    CheckBoard(red, board, moves);
-                    //    //eckBoaghjkrd(red, board, moves, DownRight);
-                    //}
                 }
 
                 // if there is a capturing move available, remove all non-capturing moves
@@ -421,6 +475,12 @@ namespace CMPT306_Checkers
                             toRemove = null;
                         }
 
+                        //make the checker a king if possible
+                        if (toMove.Kingable(toMove.Y))
+                        {
+                            toMove.MakeKing();
+                        }
+
                         //evaluate this move
                         tempMove = MakeMove(newBoard, newBlacks, newReds,
                             turn == Color.Black ? Color.Red : Color.Black, depth - 1, move);
@@ -464,99 +524,114 @@ namespace CMPT306_Checkers
             return bestMove;
         }
 
-        //public Move MakeMove2(Checker[,] board, List<Checker> blacks, List<Checker> reds, Color turn, int depth, Move currMove)
-        //{
-        //    Move best = null;
-        //    Move tempMove = null;
-        //    //Move bestMove = null;
-        //    List<Move> moves = new List<Move>();
+        public Move MakeMoveClass(Checker[,] board, List<Checker> blacks, List<Checker> reds, Color turn, int depth, Move currMove)
+        {
+            int best = 0;
+            int curr = 0;
+            Move tempMove = null;
+            Move bestMove = null;
+            List<Move> moves = new List<Move>();
+            Checker toMove;
 
-        //    Checker[,] newBoard;
-        //    List<Checker> newBlacks;
-        //    List<Checker> newReds;
+            Checker[,] newBoard;
+            List<Checker> newBlacks;
+            List<Checker> newReds;
 
-        //    bool bestNotSet = true;
-        //    bool captureFound = false;
+            if (depth > 0)
+            {
+                //GetMoves(board, )
+                if (turn == Color.Black)
+                {
+                    blacks.ForEach(x => CheckBoard(x, board, moves));
+                }
+                else
+                {
+                    reds.ForEach(x => CheckBoard(x, board, moves));
+                }
 
-        //    if (depth > 0)
-        //    {
-        //        if (turn == Color.Black)
-        //        {
-        //            blacks.ForEach(x => x.GetMovement(board, moves, ref captureFound));
-        //        }
-        //        else
-        //        {
-        //            reds.ForEach(x => x.GetMovement(board, moves, ref captureFound));
-        //        }
+                // if there is a capturing move available, remove all non-capturing moves
+                if (moves.Any(x => x.Capture))
+                {
+                    moves = moves.Where(x => x.Capture).ToList();
+                }
 
-        //        MaxNodes += moves.Count;
+                MaxNodes += moves.Count;
 
-        //        moves.ForEach(move =>
-        //        {
-        //            newBoard = new Checker[8, 8];
-        //            newBlacks = blacks.Select(x => new Checker(x)).ToList();
-        //            newReds = reds.Select(x => new Checker(x)).ToList();
+                moves.ForEach(move =>
+                {
+                    newBoard = new Checker[8, 8];
+                    newBlacks = blacks.Select(x => new Checker(x)).ToList();
+                    newReds = reds.Select(x => new Checker(x)).ToList();
 
-        //            newBlacks.ForEach(x => newBoard[x.Y, x.X] = x);
-        //            newReds.ForEach(x => newBoard[x.Y, x.X] = x);
+                    newBlacks.ForEach(x => newBoard[x.Y, x.X] = x);
+                    newReds.ForEach(x => newBoard[x.Y, x.X] = x);
 
-        //            //update position
-        //            newBoard[move.ToY, move.ToX] = move.Checker;
-        //            newBoard[move.Checker.Y, move.Checker.X] = null;
+                    toMove = newBoard[move.FromY, move.FromX];
+                    //update board
+                    newBoard[move.ToY, move.ToX] = toMove;
+                    newBoard[move.FromY, move.FromX] = null;
 
-        //            if (move.Capture)
-        //            {
-        //                //remove the captured checker
-        //                if (move.Captured.Color == Color.Black)
-        //                {
-        //                    //newBlacks.Remove(move.Captured);
-        //                    newBlacks.RemoveAll(x => x.Id == move.Captured.Id);
-        //                }
-        //                else
-        //                {
-        //                    //newReds.Remove(move.Captured);
-        //                    //newReds.First(x => x.Id == move.Captured.Id);
-        //                    newReds.RemoveAll(x => x.Id == move.Captured.Id);
-        //                }
-        //                newBoard[move.Captured.Y, move.Captured.X] = null;
-        //            }
+                    //update toMove
+                    toMove.Y = move.ToY;
+                    toMove.X = move.ToX;
 
-        //            //evaluate this move
-        //            tempMove = MakeMove2(newBoard, newBlacks, newReds,
-        //                turn == Color.Black ? Color.Red : Color.Black, depth - 1, move);
+                    if (move.Capture)
+                    {
+                        Checker toRemove = newBoard[move.CaptureY, move.CaptureX];
 
-        //            if (tempMove != null)
-        //            {
-        //                if (bestNotSet || ((turn == Color.Black && tempMove.Score > best.Score) ||
-        //                    (turn == Color.Red && tempMove.Score < best.Score)))
-        //                {
-        //                    best = tempMove;
-        //                    //bestMove = tempMove;
-        //                    bestNotSet = false;
-        //                }
-        //            }
+                        //remove the captured checker
+                        if (toRemove.Color == Color.Black)
+                        {
+                            newBlacks.Remove(toRemove);
+                        }
+                        else
+                        {
+                            newReds.Remove(toRemove);
+                        }
+                        newBoard[move.CaptureY, move.CaptureX] = null;
+                        toRemove = null;
+                    }
 
-        //        });
-        //    }
-        //    else
-        //    {
-        //        //bestMove = currMove;
-        //        best = currMove;
+                    if (move.King)
+                    {
+                        toMove.MakeKing();
+                    }
 
-        //        //do this in reverse because recursion
-        //        if (turn == Color.Black)
-        //        {
-        //            best.Score = RedHeuristic(board, blacks, reds);
-        //        }
-        //        else
-        //        {
-        //            best.Score = BlackHeuristic(board, blacks, reds);
-        //        }
-        //    }
+                    //evaluate this move
+                    tempMove = MakeMoveClass(newBoard, newBlacks, newReds,
+                        turn == Color.Black ? Color.Red : Color.Black, depth - 1, move);
 
-        //    return best;
-        //}
+                    if (tempMove != null)
+                    {
+                        //get the score
+                        //curr = tempMove[tempMove.Length - 1];
 
+                        if ((turn == Color.Black && curr > best) ||
+                            (turn == Color.Red && curr < best) || bestMove == null)
+                        {
+                            bestMove = new Move(move);
+                            bestMove.Score = tempMove.Score;
+                        }
+                    }
+                });
+            }
+            else
+            {
+                bestMove = new Move(currMove);
+
+                //do this in reverse because recursion
+                if (turn == Color.Black)
+                {
+                    bestMove.Score = RedHeuristic(board, blacks, reds);
+                }
+                else
+                {
+                    bestMove.Score = BlackHeuristic(board, blacks, reds);
+                }
+            }
+
+            return bestMove;
+        }
 
         public int[] MakeMoveParallel(Checker[,] board, List<Checker> blacks,
             List<Checker> reds, Color turn, int depth, int[] currMove)
@@ -573,20 +648,10 @@ namespace CMPT306_Checkers
                 if (turn == Color.Black)
                 {
                     blacks.ForEach(x => CheckBoard(x, board, moves));
-                    //foreach (var black in blacks)
-                    //{
-                    //    //CheckBoard(black, board, moves, UpLeft);
-                    //    //CheckBoard(black, board, moves, UpRight);
-                    //}
                 }
                 else
                 {
                     reds.ForEach(x => CheckBoard(x, board, moves));
-                    //foreach (var red in reds)
-                    //{
-                    //    //CheckBoard(red, board, moves, DownLeft);
-                    //    //CheckBoard(red, board, moves, DownRight);
-                    //}
                 }
 
                 // if there is a capturing move available, remove all non-capturing moves
@@ -638,6 +703,12 @@ namespace CMPT306_Checkers
                             }
                             newBoard[move[4], move[5]] = null;
                             toRemove = null;
+                        }
+
+                        //make the checker a king if possible
+                        if (toMove.Kingable(toMove.Y))
+                        {
+                            toMove.MakeKing();
                         }
 
                         //evaluate this move
@@ -713,8 +784,44 @@ namespace CMPT306_Checkers
             PlayTurn(Color.Black, MakeMove);
             Reset();
             PlayTurn(Color.Black, MakeMoveParallel);
-            //Reset();
+            Reset();
+            PlayTurnClass(Color.Black, MakeMoveClass);
             //PlayTurn2(Color.Black, MakeMove2);
+        }
+
+        public bool GameOver(object move, int turn)
+        {
+            string output = "\n\n";
+            bool gameOver = false;
+
+            if (Blacks.Count == 0 || (move == null && Reds.Count > Blacks.Count))
+            {
+                output = $"Reds win on turn {turn}";
+                gameOver = true;
+            }
+            else if (Reds.Count == 0 || (move == null && Blacks.Count > Reds.Count))
+            {
+                output = $"Blacks win on turn {turn}";
+                gameOver = true;
+            }
+            else if (move == null)
+            {
+                output = $"Tie on turn {turn}";
+                gameOver = true;
+            }
+
+            if (gameOver)
+            {
+                Watch.Stop();
+
+                output += $" in {Watch.ElapsedMilliseconds}ms\n" +
+                    $"MaxNodes {MaxNodes}";
+
+                PrintBoard();
+                Console.WriteLine(output);
+            }
+
+            return gameOver;
         }
 
         public void PlayTurn(Color color, Func<Checker[,], List<Checker>,
@@ -724,18 +831,27 @@ namespace CMPT306_Checkers
             Checker toMove;
             int turn = 0;
             int depth = 6;
-            Stopwatch watch = new Stopwatch();
-            string output = "";
 
-            watch.Start();
-
+            Watch.Start();
 
             while (true)
             {
-                //PrintBoard();
+                if (move != null)
+                {
+                    if (move.Length == 5)
+                    {
+                        PrintBoard(color, move[4]);
+                    }
+                    else if (move.Length == 7)
+                    {
+                        PrintBoard(color, move[6]);
+                    }
+                }
+                else
+                {
+                    PrintBoard(color);
+                }
 
-                //Console.ReadLine();
-                //move = MakeMove(Board, Blacks, Reds, color, depth, null);
                 move = GetMove(Board, Blacks, Reds, color, depth, null);
 
                 if (move != null && move.Length > 4)
@@ -763,23 +879,17 @@ namespace CMPT306_Checkers
                             Reds.Remove(toRemove);
                         }
                         Board[move[4], move[5]] = null;
-                        toRemove = null;
+                    }
+
+                    //make the checker a king if possible
+                    if (toMove.Kingable(toMove.Y))
+                    {
+                        toMove.MakeKing();
                     }
                 }
 
-                if (Blacks.Count == 0 || (move == null && Reds.Count > Blacks.Count))
+                if (GameOver(move, turn))
                 {
-                    output = $"Reds win on turn {turn}";
-                    break;
-                }
-                else if (Reds.Count == 0 || (move == null && Blacks.Count > Reds.Count))
-                {
-                    output = $"Blacks win on turn {turn}";
-                    break;
-                }
-                else if (move == null)
-                {
-                    output = $"Tie on turn {turn}";
                     break;
                 }
 
@@ -787,91 +897,65 @@ namespace CMPT306_Checkers
                 color = color == Color.Black ? Color.Red : Color.Black;
                 turn++;
             }
-
-            watch.Stop();
-
-            output += $" in {watch.ElapsedMilliseconds}ms\n" +
-                $"MaxNodes {MaxNodes}";
-
-            PrintBoard();
-            Console.WriteLine(output);
-
         }
 
-        //public void PlayTurn2(Color color, Func<Checker[,], List<Checker>, List<Checker>, Color, int, Move, Move> GetMove)
-        //{
-        //    Move move = null;
-        //    Checker toMove;
-        //    int turn = 0;
-        //    int depth = 6;
-        //    Stopwatch watch = new Stopwatch();
-        //    string output = "";
+        public void PlayTurnClass(Color color, Func<Checker[,], List<Checker>,
+            List<Checker>, Color, int, Move, Move> GetMove)
+        {
+            Move move = null;
+            Checker toMove;
+            int turn = 0;
+            int depth = 6;
 
-        //    watch.Start();
+            Watch.Start();
 
+            while (true)
+            {
+                PrintBoard(color, move?.Score);
+                move = GetMove(Board, Blacks, Reds, color, depth, null);
 
-        //    while (true)
-        //    {
-        //        PrintBoard();
+                if (move != null)
+                {
+                    toMove = Board[move.FromY, move.FromX];
+                    //update board
+                    Board[move.ToY, move.ToX] = toMove;
+                    Board[move.FromY, move.FromX] = null;
 
-        //        //Console.ReadLine();
-        //        //move = MakeMove(Board, Blacks, Reds, color, depth, null);
-        //        //move = GetMove(Board, Blacks, Reds, color, depth, null);
+                    //update toMove
+                    toMove.Y = move.ToY;
+                    toMove.X = move.ToX;
 
-        //        move = GetMove(Board, Blacks, Reds, color, depth, null);
+                    if (move.Capture)
+                    {
+                        Checker toRemove = Board[move.CaptureY, move.CaptureX];
 
-        //        if (move != null)
-        //        {
-        //            toMove = Board[move.FromY, move.FromX];
-        //            toMove.Y = move.ToY;
-        //            toMove.X = move.ToX;
-        //            //update position
-        //            Board[move.ToY, move.ToX] = toMove;
-        //            Board[move.FromY, move.FromX] = null;
+                        //remove the captured checker
+                        if (toRemove.Color == Color.Black)
+                        {
+                            Blacks.Remove(toRemove);
+                        }
+                        else
+                        {
+                            Reds.Remove(toRemove);
+                        }
+                        Board[move.CaptureY, move.CaptureX] = null;
+                    }
 
-        //            if (move.Capture)
-        //            {
-        //                //remove the captured checker
-        //                if (move.Captured.Color == Color.Black)
-        //                {
-        //                    Blacks.Remove(move.Captured);
-        //                }
-        //                else
-        //                {
-        //                    Reds.Remove(move.Captured);
-        //                }
-        //                Board[move.Captured.Y, move.Captured.X] = null;
-        //            }
-        //        }
+                    if (move.King)
+                    {
+                        toMove.MakeKing();
+                    }
+                }
 
-        //        if (Blacks.Count == 0 || (move == null && Reds.Count > Blacks.Count))
-        //        {
-        //            output = $"Reds win on turn {turn}";
-        //            break;
-        //        }
-        //        else if (Reds.Count == 0 || (move == null && Blacks.Count > Reds.Count))
-        //        {
-        //            output = $"Blacks win on turn {turn}";
-        //            break;
-        //        }
-        //        else if (move == null)
-        //        {
-        //            output = $"Tie on turn {turn}";
-        //            break;
-        //        }
+                if (GameOver(move, turn))
+                {
+                    break;
+                }
 
-        //        //change color
-        //        color = color == Color.Black ? Color.Red : Color.Black;
-        //        turn++;
-        //    }
-
-        //    watch.Stop();
-
-        //    output += $" in {watch.ElapsedMilliseconds}ms";
-
-        //    PrintBoard();
-        //    Console.WriteLine(output);
-
-        //}
+                //change color
+                color = color == Color.Black ? Color.Red : Color.Black;
+                turn++;
+            }
+        }
     }
 }

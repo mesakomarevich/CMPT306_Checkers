@@ -41,7 +41,7 @@ namespace CMPT306_Checkers
         }
     }
 
-    public struct Move
+    public class Move
     {
         public int FromX { get; set; }
         public int FromY { get; set; }
@@ -56,54 +56,44 @@ namespace CMPT306_Checkers
         public int CaptureX { get; set; }
         public int CaptureY { get; set; }
 
+        public bool King { get; set; }
 
-        public Move(int fromX, int fromY, int toY, int toX)
+        public Move(int fromY, int fromX, int toY, int toX, 
+            bool king = false, bool capture = false, 
+            int captureY = -1, int captureX = -1, int score = 0)
         {
-            FromX = fromX;
             FromY = fromY;
-
-            ToX = toX;
-            ToY = toY;
-
-            Score = 0;
-
-            Capture = false;
-
-            CaptureX = -1;
-            CaptureY = -1;
-        }
-
-        public Move(int fromX, int fromY, int toY, int toX, int score)
-        {
             FromX = fromX;
-            FromY = fromY;
 
-            ToX = toX;
             ToY = toY;
+            ToX = toX;
+
+            King = king;
 
             Score = score;
 
-            Capture = false;
+            Capture = capture;
 
-            CaptureX = -1;
-            CaptureY = -1;
-        }
-
-
-        public Move(int fromX, int fromY, int toY, int toX, int score, int captureX, int captureY)
-        {
-            FromX = fromX;
-            FromY = fromY;
-
-            ToX = toX;
-            ToY = toY;
-
-            Score = score;
-
-            Capture = false;
-
-            CaptureX = captureX;
             CaptureY = captureY;
+            CaptureX = captureX;
+        }
+
+        public Move(Move move)
+        {
+            FromY = move.FromY;
+            FromX = move.FromX;
+            
+            ToY = move.ToY;
+            ToX = move.ToX;
+
+            King = move.King;
+
+            Score = move.Score;
+
+            Capture = move.Capture;
+
+            CaptureY = move.CaptureY;
+            CaptureX = move.CaptureX;
         }
     }
 }
