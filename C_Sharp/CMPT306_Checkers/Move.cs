@@ -1,7 +1,47 @@
 ﻿using System;
-namespace CMPT306_Checkers.Move
+namespace CMPT306_Checkers
 {
-    public class Move
+    //struct for calculating the movement bounds of a checker
+    public struct MoveBound
+    {
+        public int xDir { get; set; }
+        public int yDir { get; set; }
+
+        public Predicate<int> xBound { get; set; }
+        public Predicate<int> yBound { get; set; }
+
+        public MoveBound(int newYDir, int newXDir,
+            Predicate<int> newYBound, Predicate<int> newXBound)
+        {
+            yDir = newYDir;
+            xDir = newXDir;
+
+            yBound = newYBound;
+            xBound = newXBound;
+        }
+
+        public static MoveBound UpLeft()
+        {
+            return new MoveBound(1, -1, (y) => { return y < 7; }, (x) => { return x > 0; });
+        }
+
+        public static MoveBound UpRight()
+        {
+            return new MoveBound(1, 1, (y) => { return y < 7; }, (x) => { return x < 7; });
+        }
+
+        public static MoveBound DownLeft()
+        {
+            return new MoveBound(-1, -1, (y) => { return y > 0; }, (x) => { return x > 0; });
+        }
+
+        public static MoveBound DownRight()
+        {
+            return new MoveBound(-1, 1, (y) => { return y > 0; }, (x) => { return x < 7; });
+        }
+    }
+
+    public struct Move
     {
         public int FromX { get; set; }
         public int FromY { get; set; }
@@ -9,38 +49,61 @@ namespace CMPT306_Checkers.Move
         public int ToX { get; set; }
         public int ToY { get; set; }
 
+        public int Score { get; set; }
+
         public bool Capture { get; set; }
 
-        public Checker Checker { get; set; }
+        public int CaptureX { get; set; }
+        public int CaptureY { get; set; }
 
-        public Checker Captured { get; set; }
 
-        public Move()
+        public Move(int fromX, int fromY, int toY, int toX)
         {
+            FromX = fromX;
+            FromY = fromY;
 
-        }
-
-        public Move(int toX, int toY, Checker checker, Checker captured = null)
-        {
             ToX = toX;
             ToY = toY;
-            Checker = checker;
-            FromX = Checker.X;
-            FromY = Checker.Y;
 
-            if(captured != null)
-            {
-                Capture = true;
-                Captured = captured;
-            }
+            Score = 0;
+
+            Capture = false;
+
+            CaptureX = -1;
+            CaptureY = -1;
         }
 
-        public Move(int fromX, int fromY, int toX, int toY, bool capture, Checker checker, Checker captured)
+        public Move(int fromX, int fromY, int toY, int toX, int score)
         {
-            this.FromX = fromX;
-            this.FromY = fromY;
-            this.ToX = toX;
-            this.ToY = toY;
+            FromX = fromX;
+            FromY = fromY;
+
+            ToX = toX;
+            ToY = toY;
+
+            Score = score;
+
+            Capture = false;
+
+            CaptureX = -1;
+            CaptureY = -1;
+        }
+
+
+        public Move(int fromX, int fromY, int toY, int toX, int score, int captureX, int captureY)
+        {
+            FromX = fromX;
+            FromY = fromY;
+
+            ToX = toX;
+            ToY = toY;
+
+            Score = score;
+
+            Capture = false;
+
+            CaptureX = captureX;
+            CaptureY = captureY;
         }
     }
 }
