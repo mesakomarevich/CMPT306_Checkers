@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+
 namespace CMPT306_Checkers
 {
     public class Checker
@@ -13,19 +15,23 @@ namespace CMPT306_Checkers
 
         public bool King { get; set; }
 
+        public List<MoveBound> MoveBounds { get; set; }
+
         public Checker()
-        { 
+        {
         }
 
-        public Checker(int newId, Color newColor, int newX, int newY, bool newKing): this()
+        public Checker(int newId, Color newColor, int newX, int newY, bool newKing) : this()
         {
             Id = newId;
             Color = newColor;
             X = newX;
             Y = newY;
             King = newKing;
+            SetMoveBounds();
         }
 
+        //Basically a copy constructor
         public Checker(Checker checker)
         {
             Id = checker.Id;
@@ -33,12 +39,63 @@ namespace CMPT306_Checkers
             X = checker.X;
             Y = checker.Y;
             King = checker.King;
+            MoveBounds = checker.MoveBounds;
+        }
+
+        /// <summary>
+        /// Sets the movement bounds for the checker
+        /// </summary>
+        public void SetMoveBounds()
+        {
+            MoveBounds = new List<MoveBound>();
+            if (Color == Color.Black || King)
+            {
+                MoveBounds.Add(MoveBound.UpLeft());
+                MoveBounds.Add(MoveBound.UpRight());
+            }
+            if (Color == Color.Red || King)
+            {
+                MoveBounds.Add(MoveBound.DownLeft());
+                MoveBounds.Add(MoveBound.DownRight());
+            }
+        }
+
+        public void MakeKing()
+        {
+            King = true;
+            SetMoveBounds();
+        }
+
+        /// <summary>
+        /// Checks if this checker will be made a king if it reaches the specified position
+        /// </summary>
+        /// <param name="yPos">y position to check</param>
+        /// <returns>
+        /// true if the checker will be made a king, false otherwise or if the checker is already a king
+        /// </returns>
+        public bool Kingable(int yPos)
+        {
+            bool kingable = false;
+
+            if (!King)
+            {
+                if (Color == Color.Black && yPos == 7)
+                {
+                    kingable = true;
+                }
+                else if (Color == Color.Red && yPos == 0)
+                {
+                    kingable = true;
+                }
+            }
+
+            return kingable;
         }
     }
 
     public enum Color
     {
-        Black = 0,
-        Red = 1
+        Black = 1,
+        Red = -1
     }
 }
