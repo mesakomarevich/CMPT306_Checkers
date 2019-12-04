@@ -31,6 +31,7 @@ namespace CMPT306_Checkers
             SetMoveBounds();
         }
 
+        //Basically a copy constructor
         public Checker(Checker checker)
         {
             Id = checker.Id;

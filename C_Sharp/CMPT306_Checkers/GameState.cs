@@ -53,19 +53,11 @@ namespace CMPT306_Checkers
             Move = move;
         }
 
-        //public GameState(GameState oldState)
-        //{
-        //    Board = new Checker[8, 8];
-        //    Blacks = oldState.Blacks.Select(x => new Checker(x)).ToList();
-        //    Reds = oldState.Reds.Select(x => new Checker(x)).ToList();
-        //}
-
         public GameState ApplyMove()
         {
             return ApplyMove(Move);
         }
 
-        //public IGameState<int[]> ApplyMove(int[] move)
         public GameState ApplyMove(int[] move)
         {
             Checker toMove;
@@ -107,11 +99,16 @@ namespace CMPT306_Checkers
             }
             
             return new GameState(newBoard, newBlacks, newReds,
-                Turn == Color.Black ? Color.Red : Color.Black, depth: -1, move);
+                Turn == Color.Black ? Color.Red : Color.Black, Depth - 1, move);
         }
     }
 
-    public class GameStateClass //: IGameState<Move>
+    /// <summary>
+    /// This is a poor name for this class, I initially named it this because
+    /// of some jenky garbage I did where I was representing the Moves made with
+    /// an array. Sorry.
+    /// </summary>
+    public class GameStateClass
     {
         public Checker[,] Board { get; set; }
 
@@ -154,10 +151,12 @@ namespace CMPT306_Checkers
             List<Checker> newBlacks = Blacks.Select(x => new Checker(x)).ToList();
             List<Checker> newReds = Reds.Select(x => new Checker(x)).ToList();
 
+            //Create new board and checkers
             newBoard = new Checker[8, 8];
             newBlacks = Blacks.Select(x => new Checker(x)).ToList();
             newReds = Reds.Select(x => new Checker(x)).ToList();
 
+            //Place the checkers on the new board
             newBlacks.ForEach(x => newBoard[x.Y, x.X] = x);
             newReds.ForEach(x => newBoard[x.Y, x.X] = x);
 
@@ -184,6 +183,7 @@ namespace CMPT306_Checkers
                     toRemove = null;
                 }
 
+                //Make the checker a king
                 if (move.King)
                 {
                     toMove.MakeKing();
@@ -191,7 +191,7 @@ namespace CMPT306_Checkers
             }
 
             return new GameStateClass(newBoard, newBlacks, newReds,
-                Turn == Color.Black ? Color.Red : Color.Black, depth: -1, move);
+                Turn == Color.Black ? Color.Red : Color.Black, Depth - 1, move);
         }
     }
 }

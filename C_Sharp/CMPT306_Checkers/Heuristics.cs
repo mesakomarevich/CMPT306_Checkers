@@ -29,6 +29,7 @@ namespace CMPT306_Checkers
             Color = color;
         }
 
+        //Create a standard heuristic
         public static Heuristic DefaultHeuristic(Color color)
         {
             return new Heuristic(win: 10000, capture: 200, distanceMult: 20, king: 20, score: 0, color);
