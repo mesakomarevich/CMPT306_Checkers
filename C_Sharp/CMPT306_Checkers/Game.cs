@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace CMPT306_Checkers
@@ -297,14 +298,65 @@ namespace CMPT306_Checkers
             }
         }
 
-        public void CheckBoard(Checker checker, Checker[,] board, List<Move> moves)
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static void CheckBoard(Checker checker, Checker[,] board, List<Move> moves)
+        //{
+        //    Checker tile;
+        //    MoveBound bound;
+        //    for(int i = 0; i < checker.MoveBounds.Length; i++)
+        //    {
+        //        bound = checker.MoveBounds[i];
+        //        //make sure the checker is in bounds
+        //        if (bound.yBound(checker.Y) && bound.xBound(checker.X))
+        //        {
+        //            tile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
+
+        //            //leftTile has a checker of the opposite colour on it
+        //            if (tile != null && tile.Color != checker.Color
+        //                //make sure we can potentially jump over it
+        //                && bound.yBound(checker.Y + bound.yDir)
+        //                && bound.xBound(checker.X + bound.xDir))
+        //            {
+        //                if (board[checker.Y + (2 * bound.yDir),
+        //                    checker.X + (2 * bound.xDir)] == null)
+        //                {
+        //                    moves.Add(new Move(
+        //                        fromY: checker.Y,
+        //                        fromX: checker.X,
+        //                        toY: checker.Y + (2 * bound.yDir),
+        //                        toX: checker.X + (2 * bound.xDir),
+        //                        king: checker.Kingable(checker.Y + (2 * bound.yDir)),
+        //                        capture: true,
+        //                        captureY: checker.Y + bound.yDir,
+        //                        captureX: checker.X + bound.xDir
+        //                        ));
+        //                }
+        //            }
+        //            //check if we can move left
+        //            else if (tile == null)
+        //            {
+        //                moves.Add(new Move(
+        //                        fromY: checker.Y,
+        //                        fromX: checker.X,
+        //                        toY: checker.Y + bound.yDir,
+        //                        toX: checker.X + bound.xDir,
+        //                        king: checker.Kingable(checker.Y + (2 * bound.yDir))
+        //                        ));
+        //            }
+        //        }
+        //    }
+
+        public static void CheckBoard(Checker checker, Checker[,] board, ref Move[] moves, ref int index, ref bool captureFound)
         {
-            foreach (var bound in checker.MoveBounds)
+            Checker tile;
+            MoveBound bound;
+            for (int i = 0; i < checker.MoveBounds.Length; i++)
             {
+                bound = checker.MoveBounds[i];
                 //make sure the checker is in bounds
                 if (bound.yBound(checker.Y) && bound.xBound(checker.X))
                 {
-                    Checker tile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
+                    tile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
 
                     //leftTile has a checker of the opposite colour on it
                     if (tile != null && tile.Color != checker.Color
@@ -315,7 +367,15 @@ namespace CMPT306_Checkers
                         if (board[checker.Y + (2 * bound.yDir),
                             checker.X + (2 * bound.xDir)] == null)
                         {
-                            moves.Add(new Move(
+                            // if we have found our first capture move
+                            if (!captureFound)
+                            {
+                                // reset the index to 0, even if data is already in the array
+                                index = 0;
+                                captureFound = true;
+                            }
+
+                            moves[index] = new Move(
                                 fromY: checker.Y,
                                 fromX: checker.X,
                                 toY: checker.Y + (2 * bound.yDir),
@@ -323,23 +383,67 @@ namespace CMPT306_Checkers
                                 king: checker.Kingable(checker.Y + (2 * bound.yDir)),
                                 capture: true,
                                 captureY: checker.Y + bound.yDir,
-                                captureX: checker.X + bound.xDir
-                                ));
+                                captureX: checker.X + bound.xDir);
+
+                            index++;
                         }
                     }
                     //check if we can move left
-                    else if (tile == null)
+                    else if (!captureFound && tile == null)
                     {
-                        moves.Add(new Move(
+                        moves[index] = new Move(
                                 fromY: checker.Y,
                                 fromX: checker.X,
                                 toY: checker.Y + bound.yDir,
                                 toX: checker.X + bound.xDir,
-                                king: checker.Kingable(checker.Y + (2 * bound.yDir))
-                                ));
+                                king: checker.Kingable(checker.Y + (2 * bound.yDir)));
+
+                        index++;
                     }
                 }
             }
+
+            //foreach (var bound in checker.MoveBounds)
+            //{
+            //    //make sure the checker is in bounds
+            //    if (bound.yBound(checker.Y) && bound.xBound(checker.X))
+            //    {
+            //        tile = board[checker.Y + bound.yDir, checker.X + bound.xDir];
+
+            //        //leftTile has a checker of the opposite colour on it
+            //        if (tile != null && tile.Color != checker.Color
+            //            //make sure we can potentially jump over it
+            //            && bound.yBound(checker.Y + bound.yDir)
+            //            && bound.xBound(checker.X + bound.xDir))
+            //        {
+            //            if (board[checker.Y + (2 * bound.yDir),
+            //                checker.X + (2 * bound.xDir)] == null)
+            //            {
+            //                moves.Add(new Move(
+            //                    fromY: checker.Y,
+            //                    fromX: checker.X,
+            //                    toY: checker.Y + (2 * bound.yDir),
+            //                    toX: checker.X + (2 * bound.xDir),
+            //                    king: checker.Kingable(checker.Y + (2 * bound.yDir)),
+            //                    capture: true,
+            //                    captureY: checker.Y + bound.yDir,
+            //                    captureX: checker.X + bound.xDir
+            //                    ));
+            //            }
+            //        }
+            //        //check if we can move left
+            //        else if (tile == null)
+            //        {
+            //            moves.Add(new Move(
+            //                    fromY: checker.Y,
+            //                    fromX: checker.X,
+            //                    toY: checker.Y + bound.yDir,
+            //                    toX: checker.X + bound.xDir,
+            //                    king: checker.Kingable(checker.Y + (2 * bound.yDir))
+            //                    ));
+            //        }
+            //    }
+            //}
         }
 
         //Used to add some randomness to decision making
@@ -356,7 +460,7 @@ namespace CMPT306_Checkers
             int[] bestMove = null;
             List<int[]> moves = new List<int[]>();
             GameState tempMove = null;
-            
+
             if (gameState.Depth > 0)
             {
                 if (gameState.Turn == Color.Black)
@@ -424,38 +528,44 @@ namespace CMPT306_Checkers
             //return bestMove;
         }
 
+
         public GameStateClass MakeMoveClass(GameStateClass gameState)
         {
             GameStateClass tempMove = null;
             Move bestMove = null;
-            List<Move> moves = new List<Move>();
+            //List<Move> moves = new List<Move>();
+            Move[] moves = new Move[(Blacks.Count + Reds.Count) * 2];
+            int index = 0;
+            bool captureFound = false;
 
             if (gameState.Depth > 0)
             {
                 //GetMoves(board, )
                 if (gameState.Turn == Color.Black)
                 {
-                    gameState.Blacks.ForEach(x => CheckBoard(x, gameState.Board, moves));
+                    for (int i = 0; i < gameState.Blacks.Length; i++)
+                    {
+                        CheckBoard(gameState.Blacks[i], gameState.Board, ref moves, ref index, ref captureFound);
+                    }
                 }
                 else
                 {
-                    gameState.Reds.ForEach(x => CheckBoard(x, gameState.Board, moves));
+                    for (int i = 0; i < gameState.Reds.Length; i++)
+                    {
+                        CheckBoard(gameState.Reds[i], gameState.Board, ref moves, ref index, ref captureFound);
+                    }
                 }
 
-                // if there is a capturing move available, remove all non-capturing moves
-                if (moves.Any(x => x.Capture))
+                //need to increment by one to compare against
+                //index++;
+
+                MaxNodes += moves.Length;
+                
+
+                for (int i = 0; i < index; i++)
                 {
-                    moves = moves.Where(x => x.Capture).ToList();
-                }
-
-                MaxNodes += moves.Count;
-
-                moves.ForEach(move =>
-                {
-                    tempMove = gameState.ApplyMove(move);
-
                     //evaluate this move
-                    tempMove = MakeMoveClass(tempMove);
+                    tempMove = MakeMoveClass(gameState.ApplyMove(moves[i]));
 
                     if (tempMove != null)
                     {
@@ -464,11 +574,11 @@ namespace CMPT306_Checkers
                             (gameState.Turn == Color.Red && tempMove.Move.Score < bestMove.Score) ||
                             (tempMove.Move.Score == bestMove.Score && RandomChance()))
                         {
-                            gameState.Move = new Move(move);
+                            gameState.Move = new Move(moves[i]);
                             gameState.Move.Score = tempMove.Move.Score;
                         }
                     }
-                });
+                }
             }
             else
             {
@@ -487,6 +597,101 @@ namespace CMPT306_Checkers
 
             return gameState;
         }
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public GameStateClass MakeMoveClass(GameStateClass gameState)
+        //{
+        //    GameStateClass tempMove = null;
+        //    Move bestMove = null;
+        //    //List<Move> moves = new List<Move>();
+        //    Move[] moves = new Move[(Blacks.Count + Reds.Count) * 4];
+        //    int index = 0;
+        //    bool captureFound = false;
+
+        //    if (gameState.Depth > 0)
+        //    {
+        //        //GetMoves(board, )
+        //        if (gameState.Turn == Color.Black)
+        //        {
+        //            for (int i = 0; i < gameState.Blacks.Count; i++)
+        //            {
+        //                CheckBoard(gameState.Blacks[i], gameState.Board, ref moves, ref index, ref captureFound);
+        //            }
+
+        //            // gameState.Blacks.ForEach(x => CheckBoard(x, gameState.Board, moves));
+        //        }
+        //        else
+        //        {
+        //            for (int i = 0; i < gameState.Reds.Count; i++)
+        //            {
+        //                CheckBoard(gameState.Reds[i], gameState.Board, ref moves, ref index, ref captureFound);
+        //            }
+        //            // gameState.Reds.ForEach(x => CheckBoard(x, gameState.Board, moves));
+        //        }
+
+        //        // if there is a capturing move available, remove all non-capturing moves
+        //        if (moves.Any(x => x.Capture))
+        //        {
+        //            moves = moves.Where(x => x.Capture).ToList();
+        //        }
+
+        //        MaxNodes += moves.Count;
+
+        //        for (int i = 0; i < moves.Count; i++)
+        //        {
+        //            //evaluate this move
+        //            tempMove = MakeMoveClass(gameState.ApplyMove(moves[i]));
+
+        //            if (tempMove != null)
+        //            {
+        //                if (bestMove == null ||
+        //                    (gameState.Turn == Color.Black && tempMove.Move.Score > bestMove.Score) ||
+        //                    (gameState.Turn == Color.Red && tempMove.Move.Score < bestMove.Score) ||
+        //                    (tempMove.Move.Score == bestMove.Score && RandomChance()))
+        //                {
+        //                    gameState.Move = new Move(moves[i]);
+        //                    gameState.Move.Score = tempMove.Move.Score;
+        //                }
+        //            }
+        //        }
+
+        //        //moves.ForEach(move =>
+        //        //{
+        //        //    tempMove = gameState.ApplyMove(move);
+
+        //        //    //evaluate this move
+        //        //    tempMove = MakeMoveClass(tempMove);
+
+        //        //    if (tempMove != null)
+        //        //    {
+        //        //        if (bestMove == null ||
+        //        //            (gameState.Turn == Color.Black && tempMove.Move.Score > bestMove.Score) ||
+        //        //            (gameState.Turn == Color.Red && tempMove.Move.Score < bestMove.Score) ||
+        //        //            (tempMove.Move.Score == bestMove.Score && RandomChance()))
+        //        //        {
+        //        //            gameState.Move = new Move(move);
+        //        //            gameState.Move.Score = tempMove.Move.Score;
+        //        //        }
+        //        //    }
+        //        //});
+        //    }
+        //    else
+        //    {
+        //        //bestMove = new Move(gameState.Move);
+
+        //        //do this in reverse because recursion
+        //        if (gameState.Turn == Color.Black)
+        //        {
+        //            gameState.Move.Score = RedHeuristic.Calculate(gameState.Board, gameState.Blacks, gameState.Reds);
+        //        }
+        //        else
+        //        {
+        //            gameState.Move.Score = BlackHeuristic.Calculate(gameState.Board, gameState.Blacks, gameState.Reds);
+        //        }
+        //    }
+
+        //    return gameState;
+        //}
 
         public GameState MakeMoveParallel(GameState gameState)
         {
@@ -593,29 +798,29 @@ namespace CMPT306_Checkers
             PlayTurnClass(Color.Black, MakeMoveClass);
             //PlayTurn2(Color.Black, MakeMove2);
             Reset();
-            
+
             PlayGame();
         }
 
         public void Benchmark()
         {
-            for(int i = 0; i < 50; i++)
-            {
-                PlayTurn(Color.Black, MakeMove, 4, false);
-                SoftReset();
-            }
-            PlayTurn(Color.Black, MakeMove, 4, true);
-            Reset();
+            //for (int i = 0; i < 50; i++)
+            //{
+            //    PlayTurn(Color.Black, MakeMove, 4, false);
+            //    SoftReset();
+            //}
+            //PlayTurn(Color.Black, MakeMove, 4, true);
+            //Reset();
 
 
 
-            for (int i = 0; i < 50; i++)
-            {
-                PlayTurn(Color.Black, MakeMoveParallel, 4, false);
-                SoftReset();
-            }
-            PlayTurn(Color.Black, MakeMoveParallel, 4, true);
-            Reset();
+            //for (int i = 0; i < 50; i++)
+            //{
+            //    PlayTurn(Color.Black, MakeMoveParallel, 4, false);
+            //    SoftReset();
+            //}
+            //PlayTurn(Color.Black, MakeMoveParallel, 4, true);
+            //Reset();
 
 
 
@@ -629,13 +834,13 @@ namespace CMPT306_Checkers
 
 
 
-            for (int i = 0; i < 50; i++)
-            {
-                PlayGame(4, false);
-                SoftReset();
-            }
-            PlayGame(4, true);
-            Reset();
+            //for (int i = 0; i < 50; i++)
+            //{
+            //    PlayGame(4, false);
+            //    SoftReset();
+            //}
+            //PlayGame(4, true);
+            //Reset();
 
         }
 
@@ -739,7 +944,7 @@ namespace CMPT306_Checkers
                         {
                             PrintBoard(turn, color, score);
                         }
-                        
+
                         break;
                     }
                     p1watch.Stop();
@@ -748,10 +953,10 @@ namespace CMPT306_Checkers
                 {
                     p2watch.Start();
                     int movesStart = MaxNodes;
-                    p2State = MakeMoveClass(new GameStateClass(Board, Blacks, Reds, p2, depth, null)).ApplyMove();
+                    p2State = MakeMoveClass(new GameStateClass(Board, Blacks.ToArray(), Reds.ToArray(), p2, depth, null)).ApplyMove();
                     Board = p2State.Board;
-                    Blacks = p2State.Blacks;
-                    Reds = p2State.Reds;
+                    Blacks = p2State.Blacks.ToList();
+                    Reds = p2State.Reds.ToList();
                     score = p2State?.Move?.Score;
 
                     int movesEnd = MaxNodes;
@@ -763,7 +968,6 @@ namespace CMPT306_Checkers
                         {
                             PrintBoard(turn, color, score);
                         }
-                        
                         break;
                     }
                     p2watch.Stop();
@@ -807,7 +1011,7 @@ namespace CMPT306_Checkers
                 Board = gameState.Board;
                 Blacks = gameState.Blacks;
                 Reds = gameState.Reds;
-                
+
                 if (GameOver(gameState.Move, turn, print))
                 {
                     if (print)
@@ -841,10 +1045,10 @@ namespace CMPT306_Checkers
                     depth++;
                 }
 
-                gameState = GetMove(new GameStateClass(Board, Blacks, Reds, color, depth, null)).ApplyMove();
+                gameState = GetMove(new GameStateClass(Board, Blacks.ToArray(), Reds.ToArray(), color, depth, null)).ApplyMove();
                 Board = gameState.Board;
-                Blacks = gameState.Blacks;
-                Reds = gameState.Reds;
+                Blacks = gameState.Blacks.ToList();
+                Reds = gameState.Reds.ToList();
 
                 if (GameOver(gameState.Move, turn, print))
                 {

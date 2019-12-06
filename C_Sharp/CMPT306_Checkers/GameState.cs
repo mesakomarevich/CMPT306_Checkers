@@ -68,7 +68,7 @@ namespace CMPT306_Checkers
             newBlacks.ForEach(x => newBoard[x.Y, x.X] = x);
             newReds.ForEach(x => newBoard[x.Y, x.X] = x);
 
-            if(move != null)
+            if (move != null)
             {
                 toMove = newBoard[move[0], move[1]];
                 //update board
@@ -97,7 +97,7 @@ namespace CMPT306_Checkers
                     toMove.MakeKing();
                 }
             }
-            
+
             return new GameState(newBoard, newBlacks, newReds,
                 Turn == Color.Black ? Color.Red : Color.Black, Depth - 1, move);
         }
@@ -112,9 +112,13 @@ namespace CMPT306_Checkers
     {
         public Checker[,] Board { get; set; }
 
-        public List<Checker> Blacks { get; set; }
+        //public List<Checker> Blacks { get; set; }
 
-        public List<Checker> Reds { get; set; }
+        //public List<Checker> Reds { get; set; }
+
+        public Checker[] Blacks { get; set; }
+
+        public Checker[] Reds { get; set; }
 
         public Color Turn { get; set; }
 
@@ -126,7 +130,7 @@ namespace CMPT306_Checkers
         {
         }
 
-        public GameStateClass(Checker[,] board, List<Checker> blacks, List<Checker> reds, Color turn, int depth, Move move)
+        public GameStateClass(Checker[,] board, Checker[] blacks, Checker[] reds, Color turn, int depth, Move move)
         {
             Board = board;
             Blacks = blacks;
@@ -136,6 +140,16 @@ namespace CMPT306_Checkers
             Move = move;
         }
 
+        //public GameStateClass(Checker[,] board, List<Checker> blacks, List<Checker> reds, Color turn, int depth, Move move)
+        //{
+        //    Board = board;
+        //    Blacks = blacks;
+        //    Reds = reds;
+        //    Turn = turn;
+        //    Depth = depth;
+        //    Move = move;
+        //}
+
         //Applies the current move and returns a new gamestate
         //public IGameState<Move> ApplyMove()
         public GameStateClass ApplyMove()
@@ -143,22 +157,65 @@ namespace CMPT306_Checkers
             return ApplyMove(Move);
         }
 
+        public static Checker[] RemoveChecker(Checker[] checkers, Checker[,] board, int captureX, int captureY)
+        {
+            Checker[] newCheckers = new Checker[checkers.Length - 1];
+
+            int n = 0;
+            for (int i = 0; i < checkers.Length; i++)
+            {
+                if (!(checkers[i].X == captureX && checkers[i].Y == captureY))
+                {
+                    newCheckers[n] = new Checker(checkers[i]);
+                    //add checkers to the board
+                    board[newCheckers[n].Y, newCheckers[n].X] = newCheckers[n];
+                    n++;
+                }
+            }
+
+            return newCheckers;
+        }
+
+        public static Checker[] CopyCheckers(Checker[] checkers, Checker[,] board)
+        {
+            Checker[] newCheckers = new Checker[checkers.Length];
+
+            for(int i = 0; i < checkers.Length; i++)
+            {
+                newCheckers[i] = new Checker(checkers[i]);
+                //add checkers to the board
+                board[newCheckers[i].Y, newCheckers[i].X] = newCheckers[i];
+            }
+            return newCheckers;
+        }
+
         //public IGameState<Move> ApplyMove(Move move)
         public GameStateClass ApplyMove(Move move)
         {
             Checker toMove;
             Checker[,] newBoard = new Checker[8, 8];
-            List<Checker> newBlacks = Blacks.Select(x => new Checker(x)).ToList();
-            List<Checker> newReds = Reds.Select(x => new Checker(x)).ToList();
+            Checker[] newBlacks;
+            Checker[] newReds;
 
-            //Create new board and checkers
-            newBoard = new Checker[8, 8];
-            newBlacks = Blacks.Select(x => new Checker(x)).ToList();
-            newReds = Reds.Select(x => new Checker(x)).ToList();
-
-            //Place the checkers on the new board
-            newBlacks.ForEach(x => newBoard[x.Y, x.X] = x);
-            newReds.ForEach(x => newBoard[x.Y, x.X] = x);
+            if(move != null && move.Capture)
+            {
+                //a red checker was captured
+                if(Turn == Color.Black)
+                {
+                    newReds = RemoveChecker(Reds, newBoard, move.CaptureX, move.CaptureY);
+                    newBlacks = CopyCheckers(Blacks, newBoard);
+                }
+                else
+                {
+                    newReds = CopyCheckers(Reds, newBoard);
+                    newBlacks = RemoveChecker(Blacks, newBoard, move.CaptureX, move.CaptureY);
+                }
+            }
+            else
+            {
+                newReds = CopyCheckers(Reds, newBoard);
+                newBlacks = CopyCheckers(Blacks, newBoard);
+            }
 
             if (move != null)
             {
@@ -171,17 +228,17 @@ namespace CMPT306_Checkers
                 toMove.Y = move.ToY;
                 toMove.X = move.ToX;
 
-                if (move.Capture)
-                {
-                    Checker toRemove = newBoard[move.CaptureY, move.CaptureX];
+                //if (move.Capture)
+                //{
+                //    Checker toRemove = newBoard[move.CaptureY, move.CaptureX];
 
-                    _ = toRemove.Color == Color.Black
-                        ? newBlacks.Remove(toRemove)
-                        : newReds.Remove(toRemove);
+                //    _ = toRemove.Color == Color.Black
+                //        ? newBlacks.Remove(toRemove)
+                //        : newReds.Remove(toRemove);
 
-                    newBoard[move.CaptureY, move.CaptureX] = null;
-                    toRemove = null;
-                }
+                //    newBoard[move.CaptureY, move.CaptureX] = null;
+                //    toRemove = null;
+                //}
 
                 //Make the checker a king
                 if (move.King)

@@ -12,6 +12,11 @@ namespace CMPT306_Checkers
             
             //game.CompareSpeed();
             game.Benchmark();
+
+            //for(int i = 0; i < 50; i++)
+            //{
+            //    game.PlayTurnClass()
+            //}
         }
     }
 }

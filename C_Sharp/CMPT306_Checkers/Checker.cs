@@ -15,7 +15,8 @@ namespace CMPT306_Checkers
 
         public bool King { get; set; }
 
-        public List<MoveBound> MoveBounds { get; set; }
+        //public List<MoveBound> MoveBounds { get; set; }
+        public MoveBound[] MoveBounds { get; set; }
 
         public Checker()
         {
@@ -47,17 +48,43 @@ namespace CMPT306_Checkers
         /// </summary>
         public void SetMoveBounds()
         {
-            MoveBounds = new List<MoveBound>();
+            //MoveBounds = new List<MoveBound>();
+            if (King)
+            {
+                MoveBounds = new MoveBound[] 
+                {
+                    MoveBound.UpLeft(),
+                    MoveBound.UpRight(),
+                    MoveBound.DownLeft(),
+                    MoveBound.DownRight()
+                };
+            }
             if (Color == Color.Black || King)
             {
-                MoveBounds.Add(MoveBound.UpLeft());
-                MoveBounds.Add(MoveBound.UpRight());
+                MoveBounds = new MoveBound[]
+                {
+                    MoveBound.UpLeft(),
+                    MoveBound.UpRight()
+                };
             }
             if (Color == Color.Red || King)
             {
-                MoveBounds.Add(MoveBound.DownLeft());
-                MoveBounds.Add(MoveBound.DownRight());
+                MoveBounds = new MoveBound[]
+                {
+                    MoveBound.DownLeft(),
+                    MoveBound.DownRight()
+                };
             }
+            //if (Color == Color.Black || King)
+            //{
+            //    MoveBounds.Add(MoveBound.UpLeft());
+            //    MoveBounds.Add(MoveBound.UpRight());
+            //}
+            //if (Color == Color.Red || King)
+            //{
+            //    MoveBounds.Add(MoveBound.DownLeft());
+            //    MoveBounds.Add(MoveBound.DownRight());
+            //}
         }
 
         public void MakeKing()

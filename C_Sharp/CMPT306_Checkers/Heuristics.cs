@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CMPT306_Checkers
@@ -35,6 +36,7 @@ namespace CMPT306_Checkers
             return new Heuristic(win: 10000, capture: 200, distanceMult: 20, king: 20, score: 0, color);
         }
 
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Calculate(Checker[,] board, List<Checker> blacks, List<Checker> reds)
         {
             double score = 0;
@@ -47,16 +49,50 @@ namespace CMPT306_Checkers
             score += players.Aggregate(0.0d,
                 (pscore, player) => pscore += opponents.Aggregate(0.0d,
                     (oscore, opponent) =>
-                            oscore += DistanceMult - 
+                            oscore += DistanceMult -
                             //Euclidean distance
                             Math.Sqrt(Math.Pow(player.X - opponent.X, 2) + Math.Pow(player.Y - opponent.Y, 2))));
 
-            
+
             score += players.Sum(x => x.King ? King : 0);
 
             if (opponents.Count != 0)
             {
                 score += ((12 - opponents.Count) * Capture);
+            }
+            else
+            {
+                score += Win;
+            }
+
+            //Color is 1 for black and -1 for red
+            return (int)Color * (int)score;
+        }
+
+        public int Calculate(Checker[,] board, Checker[] blacks, Checker[] reds)
+        {
+            double score = 0;
+            Checker[] players;
+            Checker[] opponents;
+
+            players = Color == Color.Black ? blacks : reds;
+            opponents = Color == Color.Black ? reds : blacks;
+
+            for (int i = 0; i < players.Length; i++)
+            {
+                for (int n = 0; n < opponents.Length; n++)
+                {
+                    //Euclidean distance
+                    score += Math.Sqrt(Math.Pow(players[i].X - opponents[n].X, 2)
+                        + Math.Pow(players[i].Y - opponents[n].Y, 2));
+                }
+
+                score += players[i].King ? King : 0;
+            }
+
+            if (opponents.Length != 0)
+            {
+                score += ((12 - opponents.Length) * Capture);
             }
             else
             {

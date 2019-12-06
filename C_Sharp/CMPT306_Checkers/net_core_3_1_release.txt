@@ -1,0 +1,96 @@
+.NET Core 3.1 Release
+
+Blacks win on turn 203 in 44239ms
+MaxNodes 17679660
+  0 1 2 3 4 5 6 7
+0
+1
+2
+3
+4 B
+5
+6
+7
+Blacks: 1
+Reds: 0
+Turn 203: Black
+Average Turn Time: 217ms
+Time: 44239ms
+Moves Enumerated: 17679660
+Score: 1
+
+
+
+
+Blacks win on turn 203 in 14596ms
+MaxNodes 16474323
+  0 1 2 3 4 5 6 7
+0
+1
+2
+3       B
+4
+5
+6
+7
+Blacks: 1
+Reds: 0
+Turn 203: Black
+Average Turn Time: 71ms
+Time: 14596ms
+Moves Enumerated: 16474323
+Score: 2
+
+
+
+
+Reds win on turn 66 in 20745ms
+MaxNodes 4519212
+  0 1 2 3 4 5 6 7
+0 R
+1               r
+2
+3
+4     r
+5   r
+6 r   r
+7   r
+Blacks: 0
+Reds: 7
+Turn 66: Red
+Average Turn Time: 314ms
+Time: 20745ms
+Moves Enumerated: 4519212
+Score: 0
+
+
+
+
+Reds win on turn 66 in 12711ms
+MaxNodes 3346515
+  0 1 2 3 4 5 6 7
+0     R       R
+1
+2         R
+3
+4 r   r
+5
+6 r
+7
+Blacks: 0
+Reds: 6
+Turn 66: Red
+Average Turn Time: 192ms
+Time: 12711ms
+Moves Enumerated: 3346515
+Score: 1
+
+
+
+
+Red time: 69ms
+Red time per turn: 2ms
+Red move enumerated: 39302
+Black time: 218ms
+Black time per turn: 6ms
+Black move enumerated: 43870
