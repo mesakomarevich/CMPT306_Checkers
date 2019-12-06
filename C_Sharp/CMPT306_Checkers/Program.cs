@@ -10,7 +10,8 @@ namespace CMPT306_Checkers
             //Console.WriteLine("Hello World!");
             Game game = new Game();
             
-            game.CompareSpeed();
+            //game.CompareSpeed();
+            game.Benchmark();
         }
     }
 }

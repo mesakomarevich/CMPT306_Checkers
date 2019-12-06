@@ -157,6 +157,58 @@ namespace CMPT306_Checkers
             RedHeuristic = Heuristic.DefaultHeuristic(Color.Red);
         }
 
+        /// <summary>
+        /// Resets the game state but not the stats
+        /// </summary>
+        public void SoftReset()
+        {
+            Board = new Checker[8, 8];
+
+            Blacks = new List<Checker>
+            {
+                new Checker(0, Color.Black, 0, 0, false),
+                new Checker(1, Color.Black, 2, 0, false),
+                new Checker(2, Color.Black, 4, 0, false),
+                new Checker(3, Color.Black, 6, 0, false),
+
+                new Checker(4, Color.Black, 1, 1, false),
+                new Checker(5, Color.Black, 3, 1, false),
+                new Checker(6, Color.Black, 5, 1, false),
+                new Checker(7, Color.Black, 7, 1, false),
+
+                new Checker(8, Color.Black, 0, 2, false),
+                new Checker(9, Color.Black, 2, 2, false),
+                new Checker(10, Color.Black, 4, 2, false),
+                new Checker(11, Color.Black, 6, 2, false),
+            };
+
+            Reds = new List<Checker>
+            {
+                new Checker(0, Color.Red, 1, 5, false),
+                new Checker(1, Color.Red, 3, 5, false),
+                new Checker(2, Color.Red, 5, 5, false),
+                new Checker(3, Color.Red, 7, 5, false),
+
+                new Checker(4, Color.Red, 0, 6, false),
+                new Checker(5, Color.Red, 2, 6, false),
+                new Checker(6, Color.Red, 4, 6, false),
+                new Checker(7, Color.Red, 6, 6, false),
+
+                new Checker(8, Color.Red, 1, 7, false),
+                new Checker(9, Color.Red, 3, 7, false),
+                new Checker(10, Color.Red, 5, 7, false),
+                new Checker(11, Color.Red, 7, 7, false),
+            };
+
+            for (int i = 0; i < Blacks.Count; i++)
+            {
+                var black = Blacks[i];
+                var red = Reds[i];
+                Board[black.Y, black.X] = black;
+                Board[red.Y, red.X] = red;
+            }
+        }
+
         public void PrintBoard(int? turnNumber = null, Color? turn = null, int? score = null)
         {
             Console.WriteLine("\n");
@@ -204,7 +256,7 @@ namespace CMPT306_Checkers
             {
                 Console.WriteLine($"Score: {score}");
             }
-            
+            Console.WriteLine("\n\n\n");
         }
 
         public void CheckBoard(Checker checker, Checker[,] board,
@@ -524,20 +576,20 @@ namespace CMPT306_Checkers
 
         public void CompareSpeed()
         {
-            Console.WriteLine("Press Enter to Play MiniMax Game with int[] to store moves");
-            Console.ReadLine();
-            PlayTurn(Color.Black, MakeMove);
+            //Console.WriteLine("Press Enter to Play MiniMax Game with int[] to store moves");
+            //Console.ReadLine();
+            PlayTurn(Color.Black, MakeMove, 4);
             Reset();
             //Console.WriteLine("Press any key to continue");
             //Console.Read();
-            Console.WriteLine("\n\n\nPress Enter to Play MiniMax Game with int[] to store moves and multiple threads");
-            Console.ReadLine();
+            //Console.WriteLine("\n\n\nPress Enter to Play MiniMax Game with int[] to store moves and multiple threads");
+            //Console.ReadLine();
             PlayTurn(Color.Black, MakeMoveParallel);
             Reset();
             //Console.WriteLine("Press any key to continue");
             //Console.Read();
-            Console.WriteLine("\n\n\nPress Enter to Play MiniMax Game with move objects to store moves");
-            Console.ReadLine();
+            //Console.WriteLine("\n\n\nPress Enter to Play MiniMax Game with move objects to store moves");
+            //Console.ReadLine();
             PlayTurnClass(Color.Black, MakeMoveClass);
             //PlayTurn2(Color.Black, MakeMove2);
             Reset();
@@ -545,7 +597,49 @@ namespace CMPT306_Checkers
             PlayGame();
         }
 
-        public bool GameOver(object move, int turn)
+        public void Benchmark()
+        {
+            for(int i = 0; i < 50; i++)
+            {
+                PlayTurn(Color.Black, MakeMove, 4, false);
+                SoftReset();
+            }
+            PlayTurn(Color.Black, MakeMove, 4, true);
+            Reset();
+
+
+
+            for (int i = 0; i < 50; i++)
+            {
+                PlayTurn(Color.Black, MakeMoveParallel, 4, false);
+                SoftReset();
+            }
+            PlayTurn(Color.Black, MakeMoveParallel, 4, true);
+            Reset();
+
+
+
+            for (int i = 0; i < 50; i++)
+            {
+                PlayTurnClass(Color.Black, MakeMoveClass, 4, false);
+                SoftReset();
+            }
+            PlayTurnClass(Color.Black, MakeMoveClass, 4, true);
+            Reset();
+
+
+
+            for (int i = 0; i < 50; i++)
+            {
+                PlayGame(4, false);
+                SoftReset();
+            }
+            PlayGame(4, true);
+            Reset();
+
+        }
+
+        public bool GameOver(object move, int turn, bool print = true)
         {
             string output = "\n\n";
             bool gameOver = false;
@@ -572,14 +666,16 @@ namespace CMPT306_Checkers
                 output += $" in {Watch.ElapsedMilliseconds}ms\n" +
                     $"MaxNodes {MaxNodes}";
 
-                //PrintBoard(turn, null, null);
-                Console.WriteLine(output);
+                if (print)
+                {
+                    Console.WriteLine(output);
+                }
             }
 
             return gameOver;
         }
 
-        public void PlayGame(int depth = 4)
+        public void PlayGame(int depth = 4, bool print = true)
         {
             GameState p1State = null;
             GameStateClass p2State = null;
@@ -604,9 +700,9 @@ namespace CMPT306_Checkers
                 p1 = Color.Red;
                 p1Color = "Red";
             }
-            Console.WriteLine($"\n\n\nPress Enter to Play MiniMax Game with the {p1Color} Checkers using " +
-                $"multiple threads and the {p2Color} checkers using a single thread");
-            Console.ReadLine();
+            //Console.WriteLine($"\n\n\nPress Enter to Play MiniMax Game with the {p1Color} Checkers using " +
+            //    $"multiple threads and the {p2Color} checkers using a single thread");
+            //Console.ReadLine();
 
             Watch.Start();
             //PrintBoard(1, color, score);
@@ -637,9 +733,13 @@ namespace CMPT306_Checkers
                     int movesEnd = MaxNodes;
                     p1Moves += (movesEnd - movesStart);
                     p1Turns++;
-                    if (GameOver(p1State.Move, turn))
+                    if (GameOver(p1State.Move, turn, print))
                     {
-                        PrintBoard(turn, color, score);
+                        if (print)
+                        {
+                            PrintBoard(turn, color, score);
+                        }
+                        
                         break;
                     }
                     p1watch.Stop();
@@ -657,26 +757,32 @@ namespace CMPT306_Checkers
                     int movesEnd = MaxNodes;
                     p2Moves += (movesEnd - movesStart);
                     p2Turns++;
-                    if (GameOver(p2State.Move, turn))
+                    if (GameOver(p2State.Move, turn, print))
                     {
-                        PrintBoard(turn, color, score);
+                        if (print)
+                        {
+                            PrintBoard(turn, color, score);
+                        }
+                        
                         break;
                     }
                     p2watch.Stop();
                 }
-                PrintBoard(turn, color, score);
+                //PrintBoard(turn, color, score);
                 //change color
                 color = color == Color.Black ? Color.Red : Color.Black;
             }
-            
 
-            Console.WriteLine($"{p1Color} time: {p1watch.ElapsedMilliseconds}ms");
-            Console.WriteLine($"{p1Color} time per turn: {p1watch.ElapsedMilliseconds/p1Turns}ms");
-            Console.WriteLine($"{p1Color} move enumerated: {p1Moves}");
+            if (print)
+            {
+                Console.WriteLine($"{p1Color} time: {p1watch.ElapsedMilliseconds}ms");
+                Console.WriteLine($"{p1Color} time per turn: {p1watch.ElapsedMilliseconds / p1Turns}ms");
+                Console.WriteLine($"{p1Color} move enumerated: {p1Moves}");
 
-            Console.WriteLine($"{p2Color} time: {p2watch.ElapsedMilliseconds}ms");
-            Console.WriteLine($"{p2Color} time per turn: {p2watch.ElapsedMilliseconds / p2Turns}ms");
-            Console.WriteLine($"{p2Color} move enumerated: {p2Moves}");
+                Console.WriteLine($"{p2Color} time: {p2watch.ElapsedMilliseconds}ms");
+                Console.WriteLine($"{p2Color} time per turn: {p2watch.ElapsedMilliseconds / p2Turns}ms");
+                Console.WriteLine($"{p2Color} move enumerated: {p2Moves}");
+            }
         }
 
         /// <summary>
@@ -684,7 +790,7 @@ namespace CMPT306_Checkers
         /// </summary>
         /// <param name="color"></param>
         /// <param name="GetMove"></param>
-        public void PlayTurn(Color color, Func<GameState, GameState> GetMove, int depth = 4)
+        public void PlayTurn(Color color, Func<GameState, GameState> GetMove, int depth = 4, bool print = true)
         {
             GameState gameState = null;
 
@@ -702,13 +808,16 @@ namespace CMPT306_Checkers
                 Blacks = gameState.Blacks;
                 Reds = gameState.Reds;
                 
-                if (GameOver(gameState.Move, turn))
+                if (GameOver(gameState.Move, turn, print))
                 {
-                    PrintBoard(turn, color, gameState?.Move[gameState.Move.Length == 5 ? 4 : 6]);
+                    if (print)
+                    {
+                        PrintBoard(turn, color, gameState?.Move[gameState.Move.Length == 5 ? 4 : 6]);
+                    }
                     break;
                 }
 
-                PrintBoard(turn, color, gameState?.Move[gameState.Move.Length == 5 ? 4 : 6]);
+                //PrintBoard(turn, color, gameState?.Move[gameState.Move.Length == 5 ? 4 : 6]);
                 //change color
                 color = color == Color.Black ? Color.Red : Color.Black;
             }
@@ -719,7 +828,7 @@ namespace CMPT306_Checkers
         /// </summary>
         /// <param name="color"></param>
         /// <param name="GetMove"></param>
-        public void PlayTurnClass(Color color, Func<GameStateClass, GameStateClass> GetMove, int depth = 4)
+        public void PlayTurnClass(Color color, Func<GameStateClass, GameStateClass> GetMove, int depth = 4, bool print = true)
         {
             GameStateClass gameState = null;
 
@@ -737,12 +846,15 @@ namespace CMPT306_Checkers
                 Blacks = gameState.Blacks;
                 Reds = gameState.Reds;
 
-                if (GameOver(gameState.Move, turn))
+                if (GameOver(gameState.Move, turn, print))
                 {
-                    PrintBoard(turn, color, gameState?.Move?.Score);
+                    if (print)
+                    {
+                        PrintBoard(turn, color, gameState?.Move?.Score);
+                    }
                     break;
                 }
-                PrintBoard(turn, color, gameState?.Move?.Score);
+                //PrintBoard(turn, color, gameState?.Move?.Score);
                 //change color
                 color = color == Color.Black ? Color.Red : Color.Black;
             }
